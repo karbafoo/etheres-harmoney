@@ -31,7 +31,8 @@ import { StaticJsonRpcProvider, UrlJsonRpcProvider } from "./url-json-rpc-provid
 import { Web3Provider } from "./web3-provider";
 import { WebSocketProvider } from "./websocket-provider";
 import { ExternalProvider, JsonRpcFetchFunc } from "./web3-provider";
-
+ 
+import {HarmonyRpcProvider} from './harmony';
 import { CommunityResourcable, Formatter, isCommunityResourcable, isCommunityResource, showThrottleMessage } from "./formatter";
 
 import { Logger } from "@ethersproject/logger";
@@ -83,6 +84,8 @@ function getDefaultProvider(network?: Network | string, options?: any): BaseProv
         Web3Provider,
 
         IpcProvider,
+
+        HarmonyRpcProvider,
     }, options);
 }
 
@@ -119,7 +122,8 @@ export {
 
     IpcProvider,
 
-
+    HarmonyRpcProvider,
+    
     ///////////////////////
     // Signer
 

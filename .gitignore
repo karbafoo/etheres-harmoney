@@ -27,3 +27,6 @@ packages/testcases/input/nameprep/**
 output/**
 
 misc/testing/**
+yarn.lock
+yarn-error.log
+package-lock.json

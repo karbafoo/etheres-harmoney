@@ -7,6 +7,7 @@
   "extends": "../../tsconfig.package.json",
   "include": [
     "./src.ts/*.ts",
+    "./src.ts/harmony/*.ts",
     "./thirdparty.d.ts"
   ]
 }
