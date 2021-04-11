@@ -21999,8 +21999,113 @@ class Web3Provider extends JsonRpcProvider {
     }
 }
 
-"use strict";
+const mainnet = [
+    "rpc.s0.t.hmny.io",
+    "rpc.s1.t.hmny.io",
+    "rpc.s2.t.hmny.io",
+    "rpc.s3.t.hmny.io",
+];
+const testnet = [
+    "rpc.s0.b.hmny.io",
+    "rpc.s1.b.hmny.io",
+    "rpc.s2.b.hmny.io",
+    "rpc.s3.b.hmny.io",
+];
+const localnet = [
+    "http:/\/localhost:9899",
+    "http:/\/localhost:9898",
+];
+
+"use strinct";
 const logger$F = new Logger(version$m);
+function getLowerCase$1(value) {
+    if (value) {
+        return value.toLowerCase();
+    }
+    return value;
+}
+class HarmonyRpcProvider extends JsonRpcProvider {
+    constructor(url, network) {
+        logger$F.checkNew(new.target, HarmonyRpcProvider);
+        super(url, network); //TODO
+        // Default URL
+        if (!url) {
+            url = getStatic(this.constructor, "defaultUrl")();
+        }
+        if (typeof (url) === "string") {
+            defineReadOnly(this, "connection", Object.freeze({
+                url: url
+            }));
+        }
+        else {
+            defineReadOnly(this, "connection", Object.freeze(shallowCopy(url)));
+        }
+        this._nextId = 42;
+    }
+    static defaultUrl() {
+        return localnet[0];
+    }
+    prepareRequest(method, params) {
+        switch (method) {
+            case "getBlockNumber":
+                return ["eth_blockNumber", []];
+            case "getGasPrice":
+                return ["eth_gasPrice", []];
+            case "getBalance":
+                return ["eth_getBalance", [getLowerCase$1(params.address), params.blockTag]];
+            case "getTransactionCount":
+                return ["eth_getTransactionCount", [getLowerCase$1(params.address), params.blockTag]];
+            case "getCode":
+                return ["eth_getCode", [getLowerCase$1(params.address), params.blockTag]];
+            case "getStorageAt":
+                return ["eth_getStorageAt", [getLowerCase$1(params.address), params.position, params.blockTag]];
+            case "sendTransaction":
+                return ["eth_sendRawTransaction", [params.signedTransaction]];
+            case "getBlock":
+                if (params.blockTag) {
+                    return ["eth_getBlockByNumber", [params.blockTag, !!params.includeTransactions]];
+                }
+                else if (params.blockHash) {
+                    return ["eth_getBlockByHash", [params.blockHash, !!params.includeTransactions]];
+                }
+                return null;
+            case "getTransaction":
+                return ["eth_getTransactionByHash", [params.transactionHash]];
+            case "getTransactionReceipt":
+                return ["eth_getTransactionReceipt", [params.transactionHash]];
+            case "call": {
+                const hexlifyTransaction = getStatic(this.constructor, "hexlifyTransaction");
+                return ["eth_call", [hexlifyTransaction(params.transaction, { from: true }), params.blockTag]];
+            }
+            case "estimateGas": {
+                const hexlifyTransaction = getStatic(this.constructor, "hexlifyTransaction");
+                return ["eth_estimateGas", [hexlifyTransaction(params.transaction, { from: true })]];
+            }
+            case "getLogs":
+                if (params.filter && params.filter.address != null) {
+                    params.filter.address = getLowerCase$1(params.filter.address);
+                }
+                return ["eth_getLogs", [params.filter]];
+            default:
+                break;
+        }
+        return null;
+    }
+    static getUrl(network = null, apiKey = '') {
+        return {
+            url: 'https://' + testnet[0] + "/",
+            throttleCallback: (attempt, url) => {
+                if (!apiKey) {
+                    showThrottleMessage();
+                }
+                return Promise.resolve(true);
+            }
+        };
+    }
+}
+
+"use strict";
+const logger$G = new Logger(version$m);
 ////////////////////////
 // Helper Functions
 function getDefaultProvider(network, options) {
@@ -22019,13 +22124,13 @@ function getDefaultProvider(network, options) {
                 case "ws":
                     return new WebSocketProvider(network);
                 default:
-                    logger$F.throwArgumentError("unsupported URL scheme", "network", network);
+                    logger$G.throwArgumentError("unsupported URL scheme", "network", network);
             }
         }
     }
     const n = getNetwork(network);
     if (!n || !n._defaultProvider) {
-        logger$F.throwError("unsupported getDefaultProvider network", Logger.errors.NETWORK_ERROR, {
+        logger$G.throwError("unsupported getDefaultProvider network", Logger.errors.NETWORK_ERROR, {
             operation: "getDefaultProvider",
             network: network
         });
@@ -22041,6 +22146,7 @@ function getDefaultProvider(network, options) {
         PocketProvider,
         Web3Provider,
         IpcProvider,
+        HarmonyRpcProvider,
     }, options);
 }
 
@@ -22064,6 +22170,7 @@ var index$3 = /*#__PURE__*/Object.freeze({
 	Web3Provider: Web3Provider,
 	WebSocketProvider: WebSocketProvider,
 	IpcProvider: IpcProvider,
+	HarmonyRpcProvider: HarmonyRpcProvider,
 	JsonRpcSigner: JsonRpcSigner,
 	getDefaultProvider: getDefaultProvider,
 	getNetwork: getNetwork,
@@ -22159,7 +22266,7 @@ function sha256$2(types, values) {
 const version$n = "units/5.1.0";
 
 "use strict";
-const logger$G = new Logger(version$n);
+const logger$H = new Logger(version$n);
 const names = [
     "wei",
     "kwei",
@@ -22174,7 +22281,7 @@ const names = [
 function commify(value) {
     const comps = String(value).split(".");
     if (comps.length > 2 || !comps[0].match(/^-?[0-9]*$/) || (comps[1] && !comps[1].match(/^[0-9]*$/)) || value === "." || value === "-.") {
-        logger$G.throwArgumentError("invalid value", "value", value);
+        logger$H.throwArgumentError("invalid value", "value", value);
     }
     // Make sure we have at least one whole digit (0 if none)
     let whole = comps[0];
@@ -22222,7 +22329,7 @@ function formatUnits(value, unitName) {
 }
 function parseUnits(value, unitName) {
     if (typeof (value) !== "string") {
-        logger$G.throwArgumentError("value must be a string", "value", value);
+        logger$H.throwArgumentError("value must be a string", "value", value);
     }
     if (typeof (unitName) === "string") {
         const index = names.indexOf(unitName);
@@ -22342,7 +22449,7 @@ var utils$1 = /*#__PURE__*/Object.freeze({
 const version$o = "ethers/5.1.0";
 
 "use strict";
-const logger$H = new Logger(version$o);
+const logger$I = new Logger(version$o);
 
 var ethers = /*#__PURE__*/Object.freeze({
 	__proto__: null,
@@ -22358,7 +22465,7 @@ var ethers = /*#__PURE__*/Object.freeze({
 	FixedNumber: FixedNumber,
 	constants: index$1,
 	get errors () { return ErrorCode; },
-	logger: logger$H,
+	logger: logger$I,
 	utils: utils$1,
 	wordlists: wordlists,
 	version: version$o,
@@ -22374,5 +22481,5 @@ try {
 }
 catch (error) { }
 
-export { BaseContract, BigNumber, Contract, ContractFactory, FixedNumber, Signer, VoidSigner, Wallet, Wordlist, index$1 as constants, ErrorCode as errors, ethers, getDefaultProvider, logger$H as logger, index$3 as providers, utils$1 as utils, version$o as version, wordlists };
+export { BaseContract, BigNumber, Contract, ContractFactory, FixedNumber, Signer, VoidSigner, Wallet, Wordlist, index$1 as constants, ErrorCode as errors, ethers, getDefaultProvider, logger$I as logger, index$3 as providers, utils$1 as utils, version$o as version, wordlists };
 //# sourceMappingURL=ethers.esm.js.map

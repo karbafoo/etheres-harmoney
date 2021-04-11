@@ -11607,6 +11607,16 @@
 
 	var inherits_1 = inherits_browser;
 
+	function isSurrogatePair(msg, i) {
+	  if ((msg.charCodeAt(i) & 0xFC00) !== 0xD800) {
+	    return false;
+	  }
+	  if (i < 0 || i + 1 >= msg.length) {
+	    return false;
+	  }
+	  return (msg.charCodeAt(i + 1) & 0xFC00) === 0xDC00;
+	}
+
 	function toArray(msg, enc) {
 	  if (Array.isArray(msg))
 	    return msg.slice();
@@ -11615,14 +11625,29 @@
 	  var res = [];
 	  if (typeof msg === 'string') {
 	    if (!enc) {
+	      // Inspired by stringToUtf8ByteArray() in closure-library by Google
+	      // https://github.com/google/closure-library/blob/8598d87242af59aac233270742c8984e2b2bdbe0/closure/goog/crypt/crypt.js#L117-L143
+	      // Apache License 2.0
+	      // https://github.com/google/closure-library/blob/master/LICENSE
+	      var p = 0;
 	      for (var i = 0; i < msg.length; i++) {
 	        var c = msg.charCodeAt(i);
-	        var hi = c >> 8;
-	        var lo = c & 0xff;
-	        if (hi)
-	          res.push(hi, lo);
-	        else
-	          res.push(lo);
+	        if (c < 128) {
+	          res[p++] = c;
+	        } else if (c < 2048) {
+	          res[p++] = (c >> 6) | 192;
+	          res[p++] = (c & 63) | 128;
+	        } else if (isSurrogatePair(msg, i)) {
+	          c = 0x10000 + ((c & 0x03FF) << 10) + (msg.charCodeAt(++i) & 0x03FF);
+	          res[p++] = (c >> 18) | 240;
+	          res[p++] = ((c >> 12) & 63) | 128;
+	          res[p++] = ((c >> 6) & 63) | 128;
+	          res[p++] = (c & 63) | 128;
+	        } else {
+	          res[p++] = (c >> 12) | 224;
+	          res[p++] = ((c >> 6) & 63) | 128;
+	          res[p++] = (c & 63) | 128;
+	        }
 	      }
 	    } else if (enc === 'hex') {
 	      msg = msg.replace(/[^a-z0-9]+/ig, '');
@@ -13066,6 +13091,1283 @@
 
 
 
+	var inherits_1$1 = inherits_browser;
+
+	function isSurrogatePair$1(msg, i) {
+	  if ((msg.charCodeAt(i) & 0xFC00) !== 0xD800) {
+	    return false;
+	  }
+	  if (i < 0 || i + 1 >= msg.length) {
+	    return false;
+	  }
+	  return (msg.charCodeAt(i + 1) & 0xFC00) === 0xDC00;
+	}
+
+	function toArray$1(msg, enc) {
+	  if (Array.isArray(msg))
+	    return msg.slice();
+	  if (!msg)
+	    return [];
+	  var res = [];
+	  if (typeof msg === 'string') {
+	    if (!enc) {
+	      // Inspired by stringToUtf8ByteArray() in closure-library by Google
+	      // https://github.com/google/closure-library/blob/8598d87242af59aac233270742c8984e2b2bdbe0/closure/goog/crypt/crypt.js#L117-L143
+	      // Apache License 2.0
+	      // https://github.com/google/closure-library/blob/master/LICENSE
+	      var p = 0;
+	      for (var i = 0; i < msg.length; i++) {
+	        var c = msg.charCodeAt(i);
+	        if (c < 128) {
+	          res[p++] = c;
+	        } else if (c < 2048) {
+	          res[p++] = (c >> 6) | 192;
+	          res[p++] = (c & 63) | 128;
+	        } else if (isSurrogatePair$1(msg, i)) {
+	          c = 0x10000 + ((c & 0x03FF) << 10) + (msg.charCodeAt(++i) & 0x03FF);
+	          res[p++] = (c >> 18) | 240;
+	          res[p++] = ((c >> 12) & 63) | 128;
+	          res[p++] = ((c >> 6) & 63) | 128;
+	          res[p++] = (c & 63) | 128;
+	        } else {
+	          res[p++] = (c >> 12) | 224;
+	          res[p++] = ((c >> 6) & 63) | 128;
+	          res[p++] = (c & 63) | 128;
+	        }
+	      }
+	    } else if (enc === 'hex') {
+	      msg = msg.replace(/[^a-z0-9]+/ig, '');
+	      if (msg.length % 2 !== 0)
+	        msg = '0' + msg;
+	      for (i = 0; i < msg.length; i += 2)
+	        res.push(parseInt(msg[i] + msg[i + 1], 16));
+	    }
+	  } else {
+	    for (i = 0; i < msg.length; i++)
+	      res[i] = msg[i] | 0;
+	  }
+	  return res;
+	}
+	var toArray_1$1 = toArray$1;
+
+	function toHex$1(msg) {
+	  var res = '';
+	  for (var i = 0; i < msg.length; i++)
+	    res += zero2$1(msg[i].toString(16));
+	  return res;
+	}
+	var toHex_1$1 = toHex$1;
+
+	function htonl$1(w) {
+	  var res = (w >>> 24) |
+	            ((w >>> 8) & 0xff00) |
+	            ((w << 8) & 0xff0000) |
+	            ((w & 0xff) << 24);
+	  return res >>> 0;
+	}
+	var htonl_1$1 = htonl$1;
+
+	function toHex32$1(msg, endian) {
+	  var res = '';
+	  for (var i = 0; i < msg.length; i++) {
+	    var w = msg[i];
+	    if (endian === 'little')
+	      w = htonl$1(w);
+	    res += zero8$1(w.toString(16));
+	  }
+	  return res;
+	}
+	var toHex32_1$1 = toHex32$1;
+
+	function zero2$1(word) {
+	  if (word.length === 1)
+	    return '0' + word;
+	  else
+	    return word;
+	}
+	var zero2_1$1 = zero2$1;
+
+	function zero8$1(word) {
+	  if (word.length === 7)
+	    return '0' + word;
+	  else if (word.length === 6)
+	    return '00' + word;
+	  else if (word.length === 5)
+	    return '000' + word;
+	  else if (word.length === 4)
+	    return '0000' + word;
+	  else if (word.length === 3)
+	    return '00000' + word;
+	  else if (word.length === 2)
+	    return '000000' + word;
+	  else if (word.length === 1)
+	    return '0000000' + word;
+	  else
+	    return word;
+	}
+	var zero8_1$1 = zero8$1;
+
+	function join32$1(msg, start, end, endian) {
+	  var len = end - start;
+	  minimalisticAssert(len % 4 === 0);
+	  var res = new Array(len / 4);
+	  for (var i = 0, k = start; i < res.length; i++, k += 4) {
+	    var w;
+	    if (endian === 'big')
+	      w = (msg[k] << 24) | (msg[k + 1] << 16) | (msg[k + 2] << 8) | msg[k + 3];
+	    else
+	      w = (msg[k + 3] << 24) | (msg[k + 2] << 16) | (msg[k + 1] << 8) | msg[k];
+	    res[i] = w >>> 0;
+	  }
+	  return res;
+	}
+	var join32_1$1 = join32$1;
+
+	function split32$1(msg, endian) {
+	  var res = new Array(msg.length * 4);
+	  for (var i = 0, k = 0; i < msg.length; i++, k += 4) {
+	    var m = msg[i];
+	    if (endian === 'big') {
+	      res[k] = m >>> 24;
+	      res[k + 1] = (m >>> 16) & 0xff;
+	      res[k + 2] = (m >>> 8) & 0xff;
+	      res[k + 3] = m & 0xff;
+	    } else {
+	      res[k + 3] = m >>> 24;
+	      res[k + 2] = (m >>> 16) & 0xff;
+	      res[k + 1] = (m >>> 8) & 0xff;
+	      res[k] = m & 0xff;
+	    }
+	  }
+	  return res;
+	}
+	var split32_1$1 = split32$1;
+
+	function rotr32$2(w, b) {
+	  return (w >>> b) | (w << (32 - b));
+	}
+	var rotr32_1$1 = rotr32$2;
+
+	function rotl32$3(w, b) {
+	  return (w << b) | (w >>> (32 - b));
+	}
+	var rotl32_1$1 = rotl32$3;
+
+	function sum32$4(a, b) {
+	  return (a + b) >>> 0;
+	}
+	var sum32_1$1 = sum32$4;
+
+	function sum32_3$2(a, b, c) {
+	  return (a + b + c) >>> 0;
+	}
+	var sum32_3_1$1 = sum32_3$2;
+
+	function sum32_4$3(a, b, c, d) {
+	  return (a + b + c + d) >>> 0;
+	}
+	var sum32_4_1$1 = sum32_4$3;
+
+	function sum32_5$3(a, b, c, d, e) {
+	  return (a + b + c + d + e) >>> 0;
+	}
+	var sum32_5_1$1 = sum32_5$3;
+
+	function sum64$2(buf, pos, ah, al) {
+	  var bh = buf[pos];
+	  var bl = buf[pos + 1];
+
+	  var lo = (al + bl) >>> 0;
+	  var hi = (lo < al ? 1 : 0) + ah + bh;
+	  buf[pos] = hi >>> 0;
+	  buf[pos + 1] = lo;
+	}
+	var sum64_1$1 = sum64$2;
+
+	function sum64_hi$2(ah, al, bh, bl) {
+	  var lo = (al + bl) >>> 0;
+	  var hi = (lo < al ? 1 : 0) + ah + bh;
+	  return hi >>> 0;
+	}
+	var sum64_hi_1$1 = sum64_hi$2;
+
+	function sum64_lo$2(ah, al, bh, bl) {
+	  var lo = al + bl;
+	  return lo >>> 0;
+	}
+	var sum64_lo_1$1 = sum64_lo$2;
+
+	function sum64_4_hi$2(ah, al, bh, bl, ch, cl, dh, dl) {
+	  var carry = 0;
+	  var lo = al;
+	  lo = (lo + bl) >>> 0;
+	  carry += lo < al ? 1 : 0;
+	  lo = (lo + cl) >>> 0;
+	  carry += lo < cl ? 1 : 0;
+	  lo = (lo + dl) >>> 0;
+	  carry += lo < dl ? 1 : 0;
+
+	  var hi = ah + bh + ch + dh + carry;
+	  return hi >>> 0;
+	}
+	var sum64_4_hi_1$1 = sum64_4_hi$2;
+
+	function sum64_4_lo$2(ah, al, bh, bl, ch, cl, dh, dl) {
+	  var lo = al + bl + cl + dl;
+	  return lo >>> 0;
+	}
+	var sum64_4_lo_1$1 = sum64_4_lo$2;
+
+	function sum64_5_hi$2(ah, al, bh, bl, ch, cl, dh, dl, eh, el) {
+	  var carry = 0;
+	  var lo = al;
+	  lo = (lo + bl) >>> 0;
+	  carry += lo < al ? 1 : 0;
+	  lo = (lo + cl) >>> 0;
+	  carry += lo < cl ? 1 : 0;
+	  lo = (lo + dl) >>> 0;
+	  carry += lo < dl ? 1 : 0;
+	  lo = (lo + el) >>> 0;
+	  carry += lo < el ? 1 : 0;
+
+	  var hi = ah + bh + ch + dh + eh + carry;
+	  return hi >>> 0;
+	}
+	var sum64_5_hi_1$1 = sum64_5_hi$2;
+
+	function sum64_5_lo$2(ah, al, bh, bl, ch, cl, dh, dl, eh, el) {
+	  var lo = al + bl + cl + dl + el;
+
+	  return lo >>> 0;
+	}
+	var sum64_5_lo_1$1 = sum64_5_lo$2;
+
+	function rotr64_hi$2(ah, al, num) {
+	  var r = (al << (32 - num)) | (ah >>> num);
+	  return r >>> 0;
+	}
+	var rotr64_hi_1$1 = rotr64_hi$2;
+
+	function rotr64_lo$2(ah, al, num) {
+	  var r = (ah << (32 - num)) | (al >>> num);
+	  return r >>> 0;
+	}
+	var rotr64_lo_1$1 = rotr64_lo$2;
+
+	function shr64_hi$2(ah, al, num) {
+	  return ah >>> num;
+	}
+	var shr64_hi_1$1 = shr64_hi$2;
+
+	function shr64_lo$2(ah, al, num) {
+	  var r = (ah << (32 - num)) | (al >>> num);
+	  return r >>> 0;
+	}
+	var shr64_lo_1$1 = shr64_lo$2;
+
+	var utils$1 = {
+		inherits: inherits_1$1,
+		toArray: toArray_1$1,
+		toHex: toHex_1$1,
+		htonl: htonl_1$1,
+		toHex32: toHex32_1$1,
+		zero2: zero2_1$1,
+		zero8: zero8_1$1,
+		join32: join32_1$1,
+		split32: split32_1$1,
+		rotr32: rotr32_1$1,
+		rotl32: rotl32_1$1,
+		sum32: sum32_1$1,
+		sum32_3: sum32_3_1$1,
+		sum32_4: sum32_4_1$1,
+		sum32_5: sum32_5_1$1,
+		sum64: sum64_1$1,
+		sum64_hi: sum64_hi_1$1,
+		sum64_lo: sum64_lo_1$1,
+		sum64_4_hi: sum64_4_hi_1$1,
+		sum64_4_lo: sum64_4_lo_1$1,
+		sum64_5_hi: sum64_5_hi_1$1,
+		sum64_5_lo: sum64_5_lo_1$1,
+		rotr64_hi: rotr64_hi_1$1,
+		rotr64_lo: rotr64_lo_1$1,
+		shr64_hi: shr64_hi_1$1,
+		shr64_lo: shr64_lo_1$1
+	};
+
+	'use strict';
+
+
+
+
+	function BlockHash$5() {
+	  this.pending = null;
+	  this.pendingTotal = 0;
+	  this.blockSize = this.constructor.blockSize;
+	  this.outSize = this.constructor.outSize;
+	  this.hmacStrength = this.constructor.hmacStrength;
+	  this.padLength = this.constructor.padLength / 8;
+	  this.endian = 'big';
+
+	  this._delta8 = this.blockSize / 8;
+	  this._delta32 = this.blockSize / 32;
+	}
+	var BlockHash_1$1 = BlockHash$5;
+
+	BlockHash$5.prototype.update = function update(msg, enc) {
+	  // Convert message to array, pad it, and join into 32bit blocks
+	  msg = utils$1.toArray(msg, enc);
+	  if (!this.pending)
+	    this.pending = msg;
+	  else
+	    this.pending = this.pending.concat(msg);
+	  this.pendingTotal += msg.length;
+
+	  // Enough data, try updating
+	  if (this.pending.length >= this._delta8) {
+	    msg = this.pending;
+
+	    // Process pending data in blocks
+	    var r = msg.length % this._delta8;
+	    this.pending = msg.slice(msg.length - r, msg.length);
+	    if (this.pending.length === 0)
+	      this.pending = null;
+
+	    msg = utils$1.join32(msg, 0, msg.length - r, this.endian);
+	    for (var i = 0; i < msg.length; i += this._delta32)
+	      this._update(msg, i, i + this._delta32);
+	  }
+
+	  return this;
+	};
+
+	BlockHash$5.prototype.digest = function digest(enc) {
+	  this.update(this._pad());
+	  minimalisticAssert(this.pending === null);
+
+	  return this._digest(enc);
+	};
+
+	BlockHash$5.prototype._pad = function pad() {
+	  var len = this.pendingTotal;
+	  var bytes = this._delta8;
+	  var k = bytes - ((len + this.padLength) % bytes);
+	  var res = new Array(k + this.padLength);
+	  res[0] = 0x80;
+	  for (var i = 1; i < k; i++)
+	    res[i] = 0;
+
+	  // Append length
+	  len <<= 3;
+	  if (this.endian === 'big') {
+	    for (var t = 8; t < this.padLength; t++)
+	      res[i++] = 0;
+
+	    res[i++] = 0;
+	    res[i++] = 0;
+	    res[i++] = 0;
+	    res[i++] = 0;
+	    res[i++] = (len >>> 24) & 0xff;
+	    res[i++] = (len >>> 16) & 0xff;
+	    res[i++] = (len >>> 8) & 0xff;
+	    res[i++] = len & 0xff;
+	  } else {
+	    res[i++] = len & 0xff;
+	    res[i++] = (len >>> 8) & 0xff;
+	    res[i++] = (len >>> 16) & 0xff;
+	    res[i++] = (len >>> 24) & 0xff;
+	    res[i++] = 0;
+	    res[i++] = 0;
+	    res[i++] = 0;
+	    res[i++] = 0;
+
+	    for (t = 8; t < this.padLength; t++)
+	      res[i++] = 0;
+	  }
+
+	  return res;
+	};
+
+	var common$2 = {
+		BlockHash: BlockHash_1$1
+	};
+
+	'use strict';
+
+
+	var rotr32$3 = utils$1.rotr32;
+
+	function ft_1$2(s, x, y, z) {
+	  if (s === 0)
+	    return ch32$2(x, y, z);
+	  if (s === 1 || s === 3)
+	    return p32$1(x, y, z);
+	  if (s === 2)
+	    return maj32$2(x, y, z);
+	}
+	var ft_1_1$1 = ft_1$2;
+
+	function ch32$2(x, y, z) {
+	  return (x & y) ^ ((~x) & z);
+	}
+	var ch32_1$1 = ch32$2;
+
+	function maj32$2(x, y, z) {
+	  return (x & y) ^ (x & z) ^ (y & z);
+	}
+	var maj32_1$1 = maj32$2;
+
+	function p32$1(x, y, z) {
+	  return x ^ y ^ z;
+	}
+	var p32_1$1 = p32$1;
+
+	function s0_256$2(x) {
+	  return rotr32$3(x, 2) ^ rotr32$3(x, 13) ^ rotr32$3(x, 22);
+	}
+	var s0_256_1$1 = s0_256$2;
+
+	function s1_256$2(x) {
+	  return rotr32$3(x, 6) ^ rotr32$3(x, 11) ^ rotr32$3(x, 25);
+	}
+	var s1_256_1$1 = s1_256$2;
+
+	function g0_256$2(x) {
+	  return rotr32$3(x, 7) ^ rotr32$3(x, 18) ^ (x >>> 3);
+	}
+	var g0_256_1$1 = g0_256$2;
+
+	function g1_256$2(x) {
+	  return rotr32$3(x, 17) ^ rotr32$3(x, 19) ^ (x >>> 10);
+	}
+	var g1_256_1$1 = g1_256$2;
+
+	var common$3 = {
+		ft_1: ft_1_1$1,
+		ch32: ch32_1$1,
+		maj32: maj32_1$1,
+		p32: p32_1$1,
+		s0_256: s0_256_1$1,
+		s1_256: s1_256_1$1,
+		g0_256: g0_256_1$1,
+		g1_256: g1_256_1$1
+	};
+
+	'use strict';
+
+
+
+
+
+	var rotl32$4 = utils$1.rotl32;
+	var sum32$5 = utils$1.sum32;
+	var sum32_5$4 = utils$1.sum32_5;
+	var ft_1$3 = common$3.ft_1;
+	var BlockHash$6 = common$2.BlockHash;
+
+	var sha1_K$1 = [
+	  0x5A827999, 0x6ED9EBA1,
+	  0x8F1BBCDC, 0xCA62C1D6
+	];
+
+	function SHA1$1() {
+	  if (!(this instanceof SHA1$1))
+	    return new SHA1$1();
+
+	  BlockHash$6.call(this);
+	  this.h = [
+	    0x67452301, 0xefcdab89, 0x98badcfe,
+	    0x10325476, 0xc3d2e1f0 ];
+	  this.W = new Array(80);
+	}
+
+	utils$1.inherits(SHA1$1, BlockHash$6);
+	var _1$1 = SHA1$1;
+
+	SHA1$1.blockSize = 512;
+	SHA1$1.outSize = 160;
+	SHA1$1.hmacStrength = 80;
+	SHA1$1.padLength = 64;
+
+	SHA1$1.prototype._update = function _update(msg, start) {
+	  var W = this.W;
+
+	  for (var i = 0; i < 16; i++)
+	    W[i] = msg[start + i];
+
+	  for(; i < W.length; i++)
+	    W[i] = rotl32$4(W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16], 1);
+
+	  var a = this.h[0];
+	  var b = this.h[1];
+	  var c = this.h[2];
+	  var d = this.h[3];
+	  var e = this.h[4];
+
+	  for (i = 0; i < W.length; i++) {
+	    var s = ~~(i / 20);
+	    var t = sum32_5$4(rotl32$4(a, 5), ft_1$3(s, b, c, d), e, W[i], sha1_K$1[s]);
+	    e = d;
+	    d = c;
+	    c = rotl32$4(b, 30);
+	    b = a;
+	    a = t;
+	  }
+
+	  this.h[0] = sum32$5(this.h[0], a);
+	  this.h[1] = sum32$5(this.h[1], b);
+	  this.h[2] = sum32$5(this.h[2], c);
+	  this.h[3] = sum32$5(this.h[3], d);
+	  this.h[4] = sum32$5(this.h[4], e);
+	};
+
+	SHA1$1.prototype._digest = function digest(enc) {
+	  if (enc === 'hex')
+	    return utils$1.toHex32(this.h, 'big');
+	  else
+	    return utils$1.split32(this.h, 'big');
+	};
+
+	'use strict';
+
+
+
+
+
+
+	var sum32$6 = utils$1.sum32;
+	var sum32_4$4 = utils$1.sum32_4;
+	var sum32_5$5 = utils$1.sum32_5;
+	var ch32$3 = common$3.ch32;
+	var maj32$3 = common$3.maj32;
+	var s0_256$3 = common$3.s0_256;
+	var s1_256$3 = common$3.s1_256;
+	var g0_256$3 = common$3.g0_256;
+	var g1_256$3 = common$3.g1_256;
+
+	var BlockHash$7 = common$2.BlockHash;
+
+	var sha256_K$1 = [
+	  0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
+	  0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+	  0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
+	  0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+	  0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
+	  0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+	  0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
+	  0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+	  0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
+	  0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+	  0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3,
+	  0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+	  0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5,
+	  0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+	  0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
+	  0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+	];
+
+	function SHA256$1() {
+	  if (!(this instanceof SHA256$1))
+	    return new SHA256$1();
+
+	  BlockHash$7.call(this);
+	  this.h = [
+	    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+	    0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
+	  ];
+	  this.k = sha256_K$1;
+	  this.W = new Array(64);
+	}
+	utils$1.inherits(SHA256$1, BlockHash$7);
+	var _256$1 = SHA256$1;
+
+	SHA256$1.blockSize = 512;
+	SHA256$1.outSize = 256;
+	SHA256$1.hmacStrength = 192;
+	SHA256$1.padLength = 64;
+
+	SHA256$1.prototype._update = function _update(msg, start) {
+	  var W = this.W;
+
+	  for (var i = 0; i < 16; i++)
+	    W[i] = msg[start + i];
+	  for (; i < W.length; i++)
+	    W[i] = sum32_4$4(g1_256$3(W[i - 2]), W[i - 7], g0_256$3(W[i - 15]), W[i - 16]);
+
+	  var a = this.h[0];
+	  var b = this.h[1];
+	  var c = this.h[2];
+	  var d = this.h[3];
+	  var e = this.h[4];
+	  var f = this.h[5];
+	  var g = this.h[6];
+	  var h = this.h[7];
+
+	  minimalisticAssert(this.k.length === W.length);
+	  for (i = 0; i < W.length; i++) {
+	    var T1 = sum32_5$5(h, s1_256$3(e), ch32$3(e, f, g), this.k[i], W[i]);
+	    var T2 = sum32$6(s0_256$3(a), maj32$3(a, b, c));
+	    h = g;
+	    g = f;
+	    f = e;
+	    e = sum32$6(d, T1);
+	    d = c;
+	    c = b;
+	    b = a;
+	    a = sum32$6(T1, T2);
+	  }
+
+	  this.h[0] = sum32$6(this.h[0], a);
+	  this.h[1] = sum32$6(this.h[1], b);
+	  this.h[2] = sum32$6(this.h[2], c);
+	  this.h[3] = sum32$6(this.h[3], d);
+	  this.h[4] = sum32$6(this.h[4], e);
+	  this.h[5] = sum32$6(this.h[5], f);
+	  this.h[6] = sum32$6(this.h[6], g);
+	  this.h[7] = sum32$6(this.h[7], h);
+	};
+
+	SHA256$1.prototype._digest = function digest(enc) {
+	  if (enc === 'hex')
+	    return utils$1.toHex32(this.h, 'big');
+	  else
+	    return utils$1.split32(this.h, 'big');
+	};
+
+	'use strict';
+
+
+
+
+	function SHA224$1() {
+	  if (!(this instanceof SHA224$1))
+	    return new SHA224$1();
+
+	  _256$1.call(this);
+	  this.h = [
+	    0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939,
+	    0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4 ];
+	}
+	utils$1.inherits(SHA224$1, _256$1);
+	var _224$1 = SHA224$1;
+
+	SHA224$1.blockSize = 512;
+	SHA224$1.outSize = 224;
+	SHA224$1.hmacStrength = 192;
+	SHA224$1.padLength = 64;
+
+	SHA224$1.prototype._digest = function digest(enc) {
+	  // Just truncate output
+	  if (enc === 'hex')
+	    return utils$1.toHex32(this.h.slice(0, 7), 'big');
+	  else
+	    return utils$1.split32(this.h.slice(0, 7), 'big');
+	};
+
+	'use strict';
+
+
+
+
+
+	var rotr64_hi$3 = utils$1.rotr64_hi;
+	var rotr64_lo$3 = utils$1.rotr64_lo;
+	var shr64_hi$3 = utils$1.shr64_hi;
+	var shr64_lo$3 = utils$1.shr64_lo;
+	var sum64$3 = utils$1.sum64;
+	var sum64_hi$3 = utils$1.sum64_hi;
+	var sum64_lo$3 = utils$1.sum64_lo;
+	var sum64_4_hi$3 = utils$1.sum64_4_hi;
+	var sum64_4_lo$3 = utils$1.sum64_4_lo;
+	var sum64_5_hi$3 = utils$1.sum64_5_hi;
+	var sum64_5_lo$3 = utils$1.sum64_5_lo;
+
+	var BlockHash$8 = common$2.BlockHash;
+
+	var sha512_K$1 = [
+	  0x428a2f98, 0xd728ae22, 0x71374491, 0x23ef65cd,
+	  0xb5c0fbcf, 0xec4d3b2f, 0xe9b5dba5, 0x8189dbbc,
+	  0x3956c25b, 0xf348b538, 0x59f111f1, 0xb605d019,
+	  0x923f82a4, 0xaf194f9b, 0xab1c5ed5, 0xda6d8118,
+	  0xd807aa98, 0xa3030242, 0x12835b01, 0x45706fbe,
+	  0x243185be, 0x4ee4b28c, 0x550c7dc3, 0xd5ffb4e2,
+	  0x72be5d74, 0xf27b896f, 0x80deb1fe, 0x3b1696b1,
+	  0x9bdc06a7, 0x25c71235, 0xc19bf174, 0xcf692694,
+	  0xe49b69c1, 0x9ef14ad2, 0xefbe4786, 0x384f25e3,
+	  0x0fc19dc6, 0x8b8cd5b5, 0x240ca1cc, 0x77ac9c65,
+	  0x2de92c6f, 0x592b0275, 0x4a7484aa, 0x6ea6e483,
+	  0x5cb0a9dc, 0xbd41fbd4, 0x76f988da, 0x831153b5,
+	  0x983e5152, 0xee66dfab, 0xa831c66d, 0x2db43210,
+	  0xb00327c8, 0x98fb213f, 0xbf597fc7, 0xbeef0ee4,
+	  0xc6e00bf3, 0x3da88fc2, 0xd5a79147, 0x930aa725,
+	  0x06ca6351, 0xe003826f, 0x14292967, 0x0a0e6e70,
+	  0x27b70a85, 0x46d22ffc, 0x2e1b2138, 0x5c26c926,
+	  0x4d2c6dfc, 0x5ac42aed, 0x53380d13, 0x9d95b3df,
+	  0x650a7354, 0x8baf63de, 0x766a0abb, 0x3c77b2a8,
+	  0x81c2c92e, 0x47edaee6, 0x92722c85, 0x1482353b,
+	  0xa2bfe8a1, 0x4cf10364, 0xa81a664b, 0xbc423001,
+	  0xc24b8b70, 0xd0f89791, 0xc76c51a3, 0x0654be30,
+	  0xd192e819, 0xd6ef5218, 0xd6990624, 0x5565a910,
+	  0xf40e3585, 0x5771202a, 0x106aa070, 0x32bbd1b8,
+	  0x19a4c116, 0xb8d2d0c8, 0x1e376c08, 0x5141ab53,
+	  0x2748774c, 0xdf8eeb99, 0x34b0bcb5, 0xe19b48a8,
+	  0x391c0cb3, 0xc5c95a63, 0x4ed8aa4a, 0xe3418acb,
+	  0x5b9cca4f, 0x7763e373, 0x682e6ff3, 0xd6b2b8a3,
+	  0x748f82ee, 0x5defb2fc, 0x78a5636f, 0x43172f60,
+	  0x84c87814, 0xa1f0ab72, 0x8cc70208, 0x1a6439ec,
+	  0x90befffa, 0x23631e28, 0xa4506ceb, 0xde82bde9,
+	  0xbef9a3f7, 0xb2c67915, 0xc67178f2, 0xe372532b,
+	  0xca273ece, 0xea26619c, 0xd186b8c7, 0x21c0c207,
+	  0xeada7dd6, 0xcde0eb1e, 0xf57d4f7f, 0xee6ed178,
+	  0x06f067aa, 0x72176fba, 0x0a637dc5, 0xa2c898a6,
+	  0x113f9804, 0xbef90dae, 0x1b710b35, 0x131c471b,
+	  0x28db77f5, 0x23047d84, 0x32caab7b, 0x40c72493,
+	  0x3c9ebe0a, 0x15c9bebc, 0x431d67c4, 0x9c100d4c,
+	  0x4cc5d4be, 0xcb3e42b6, 0x597f299c, 0xfc657e2a,
+	  0x5fcb6fab, 0x3ad6faec, 0x6c44198c, 0x4a475817
+	];
+
+	function SHA512$1() {
+	  if (!(this instanceof SHA512$1))
+	    return new SHA512$1();
+
+	  BlockHash$8.call(this);
+	  this.h = [
+	    0x6a09e667, 0xf3bcc908,
+	    0xbb67ae85, 0x84caa73b,
+	    0x3c6ef372, 0xfe94f82b,
+	    0xa54ff53a, 0x5f1d36f1,
+	    0x510e527f, 0xade682d1,
+	    0x9b05688c, 0x2b3e6c1f,
+	    0x1f83d9ab, 0xfb41bd6b,
+	    0x5be0cd19, 0x137e2179 ];
+	  this.k = sha512_K$1;
+	  this.W = new Array(160);
+	}
+	utils$1.inherits(SHA512$1, BlockHash$8);
+	var _512$1 = SHA512$1;
+
+	SHA512$1.blockSize = 1024;
+	SHA512$1.outSize = 512;
+	SHA512$1.hmacStrength = 192;
+	SHA512$1.padLength = 128;
+
+	SHA512$1.prototype._prepareBlock = function _prepareBlock(msg, start) {
+	  var W = this.W;
+
+	  // 32 x 32bit words
+	  for (var i = 0; i < 32; i++)
+	    W[i] = msg[start + i];
+	  for (; i < W.length; i += 2) {
+	    var c0_hi = g1_512_hi$1(W[i - 4], W[i - 3]);  // i - 2
+	    var c0_lo = g1_512_lo$1(W[i - 4], W[i - 3]);
+	    var c1_hi = W[i - 14];  // i - 7
+	    var c1_lo = W[i - 13];
+	    var c2_hi = g0_512_hi$1(W[i - 30], W[i - 29]);  // i - 15
+	    var c2_lo = g0_512_lo$1(W[i - 30], W[i - 29]);
+	    var c3_hi = W[i - 32];  // i - 16
+	    var c3_lo = W[i - 31];
+
+	    W[i] = sum64_4_hi$3(
+	      c0_hi, c0_lo,
+	      c1_hi, c1_lo,
+	      c2_hi, c2_lo,
+	      c3_hi, c3_lo);
+	    W[i + 1] = sum64_4_lo$3(
+	      c0_hi, c0_lo,
+	      c1_hi, c1_lo,
+	      c2_hi, c2_lo,
+	      c3_hi, c3_lo);
+	  }
+	};
+
+	SHA512$1.prototype._update = function _update(msg, start) {
+	  this._prepareBlock(msg, start);
+
+	  var W = this.W;
+
+	  var ah = this.h[0];
+	  var al = this.h[1];
+	  var bh = this.h[2];
+	  var bl = this.h[3];
+	  var ch = this.h[4];
+	  var cl = this.h[5];
+	  var dh = this.h[6];
+	  var dl = this.h[7];
+	  var eh = this.h[8];
+	  var el = this.h[9];
+	  var fh = this.h[10];
+	  var fl = this.h[11];
+	  var gh = this.h[12];
+	  var gl = this.h[13];
+	  var hh = this.h[14];
+	  var hl = this.h[15];
+
+	  minimalisticAssert(this.k.length === W.length);
+	  for (var i = 0; i < W.length; i += 2) {
+	    var c0_hi = hh;
+	    var c0_lo = hl;
+	    var c1_hi = s1_512_hi$1(eh, el);
+	    var c1_lo = s1_512_lo$1(eh, el);
+	    var c2_hi = ch64_hi$1(eh, el, fh, fl, gh, gl);
+	    var c2_lo = ch64_lo$1(eh, el, fh, fl, gh, gl);
+	    var c3_hi = this.k[i];
+	    var c3_lo = this.k[i + 1];
+	    var c4_hi = W[i];
+	    var c4_lo = W[i + 1];
+
+	    var T1_hi = sum64_5_hi$3(
+	      c0_hi, c0_lo,
+	      c1_hi, c1_lo,
+	      c2_hi, c2_lo,
+	      c3_hi, c3_lo,
+	      c4_hi, c4_lo);
+	    var T1_lo = sum64_5_lo$3(
+	      c0_hi, c0_lo,
+	      c1_hi, c1_lo,
+	      c2_hi, c2_lo,
+	      c3_hi, c3_lo,
+	      c4_hi, c4_lo);
+
+	    c0_hi = s0_512_hi$1(ah, al);
+	    c0_lo = s0_512_lo$1(ah, al);
+	    c1_hi = maj64_hi$1(ah, al, bh, bl, ch, cl);
+	    c1_lo = maj64_lo$1(ah, al, bh, bl, ch, cl);
+
+	    var T2_hi = sum64_hi$3(c0_hi, c0_lo, c1_hi, c1_lo);
+	    var T2_lo = sum64_lo$3(c0_hi, c0_lo, c1_hi, c1_lo);
+
+	    hh = gh;
+	    hl = gl;
+
+	    gh = fh;
+	    gl = fl;
+
+	    fh = eh;
+	    fl = el;
+
+	    eh = sum64_hi$3(dh, dl, T1_hi, T1_lo);
+	    el = sum64_lo$3(dl, dl, T1_hi, T1_lo);
+
+	    dh = ch;
+	    dl = cl;
+
+	    ch = bh;
+	    cl = bl;
+
+	    bh = ah;
+	    bl = al;
+
+	    ah = sum64_hi$3(T1_hi, T1_lo, T2_hi, T2_lo);
+	    al = sum64_lo$3(T1_hi, T1_lo, T2_hi, T2_lo);
+	  }
+
+	  sum64$3(this.h, 0, ah, al);
+	  sum64$3(this.h, 2, bh, bl);
+	  sum64$3(this.h, 4, ch, cl);
+	  sum64$3(this.h, 6, dh, dl);
+	  sum64$3(this.h, 8, eh, el);
+	  sum64$3(this.h, 10, fh, fl);
+	  sum64$3(this.h, 12, gh, gl);
+	  sum64$3(this.h, 14, hh, hl);
+	};
+
+	SHA512$1.prototype._digest = function digest(enc) {
+	  if (enc === 'hex')
+	    return utils$1.toHex32(this.h, 'big');
+	  else
+	    return utils$1.split32(this.h, 'big');
+	};
+
+	function ch64_hi$1(xh, xl, yh, yl, zh) {
+	  var r = (xh & yh) ^ ((~xh) & zh);
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function ch64_lo$1(xh, xl, yh, yl, zh, zl) {
+	  var r = (xl & yl) ^ ((~xl) & zl);
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function maj64_hi$1(xh, xl, yh, yl, zh) {
+	  var r = (xh & yh) ^ (xh & zh) ^ (yh & zh);
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function maj64_lo$1(xh, xl, yh, yl, zh, zl) {
+	  var r = (xl & yl) ^ (xl & zl) ^ (yl & zl);
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function s0_512_hi$1(xh, xl) {
+	  var c0_hi = rotr64_hi$3(xh, xl, 28);
+	  var c1_hi = rotr64_hi$3(xl, xh, 2);  // 34
+	  var c2_hi = rotr64_hi$3(xl, xh, 7);  // 39
+
+	  var r = c0_hi ^ c1_hi ^ c2_hi;
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function s0_512_lo$1(xh, xl) {
+	  var c0_lo = rotr64_lo$3(xh, xl, 28);
+	  var c1_lo = rotr64_lo$3(xl, xh, 2);  // 34
+	  var c2_lo = rotr64_lo$3(xl, xh, 7);  // 39
+
+	  var r = c0_lo ^ c1_lo ^ c2_lo;
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function s1_512_hi$1(xh, xl) {
+	  var c0_hi = rotr64_hi$3(xh, xl, 14);
+	  var c1_hi = rotr64_hi$3(xh, xl, 18);
+	  var c2_hi = rotr64_hi$3(xl, xh, 9);  // 41
+
+	  var r = c0_hi ^ c1_hi ^ c2_hi;
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function s1_512_lo$1(xh, xl) {
+	  var c0_lo = rotr64_lo$3(xh, xl, 14);
+	  var c1_lo = rotr64_lo$3(xh, xl, 18);
+	  var c2_lo = rotr64_lo$3(xl, xh, 9);  // 41
+
+	  var r = c0_lo ^ c1_lo ^ c2_lo;
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function g0_512_hi$1(xh, xl) {
+	  var c0_hi = rotr64_hi$3(xh, xl, 1);
+	  var c1_hi = rotr64_hi$3(xh, xl, 8);
+	  var c2_hi = shr64_hi$3(xh, xl, 7);
+
+	  var r = c0_hi ^ c1_hi ^ c2_hi;
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function g0_512_lo$1(xh, xl) {
+	  var c0_lo = rotr64_lo$3(xh, xl, 1);
+	  var c1_lo = rotr64_lo$3(xh, xl, 8);
+	  var c2_lo = shr64_lo$3(xh, xl, 7);
+
+	  var r = c0_lo ^ c1_lo ^ c2_lo;
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function g1_512_hi$1(xh, xl) {
+	  var c0_hi = rotr64_hi$3(xh, xl, 19);
+	  var c1_hi = rotr64_hi$3(xl, xh, 29);  // 61
+	  var c2_hi = shr64_hi$3(xh, xl, 6);
+
+	  var r = c0_hi ^ c1_hi ^ c2_hi;
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function g1_512_lo$1(xh, xl) {
+	  var c0_lo = rotr64_lo$3(xh, xl, 19);
+	  var c1_lo = rotr64_lo$3(xl, xh, 29);  // 61
+	  var c2_lo = shr64_lo$3(xh, xl, 6);
+
+	  var r = c0_lo ^ c1_lo ^ c2_lo;
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	'use strict';
+
+
+
+
+
+	function SHA384$1() {
+	  if (!(this instanceof SHA384$1))
+	    return new SHA384$1();
+
+	  _512$1.call(this);
+	  this.h = [
+	    0xcbbb9d5d, 0xc1059ed8,
+	    0x629a292a, 0x367cd507,
+	    0x9159015a, 0x3070dd17,
+	    0x152fecd8, 0xf70e5939,
+	    0x67332667, 0xffc00b31,
+	    0x8eb44a87, 0x68581511,
+	    0xdb0c2e0d, 0x64f98fa7,
+	    0x47b5481d, 0xbefa4fa4 ];
+	}
+	utils$1.inherits(SHA384$1, _512$1);
+	var _384$1 = SHA384$1;
+
+	SHA384$1.blockSize = 1024;
+	SHA384$1.outSize = 384;
+	SHA384$1.hmacStrength = 192;
+	SHA384$1.padLength = 128;
+
+	SHA384$1.prototype._digest = function digest(enc) {
+	  if (enc === 'hex')
+	    return utils$1.toHex32(this.h.slice(0, 12), 'big');
+	  else
+	    return utils$1.split32(this.h.slice(0, 12), 'big');
+	};
+
+	'use strict';
+
+	var sha1$1 = _1$1;
+	var sha224$1 = _224$1;
+	var sha256$1 = _256$1;
+	var sha384$1 = _384$1;
+	var sha512$1 = _512$1;
+
+	var sha$1 = {
+		sha1: sha1$1,
+		sha224: sha224$1,
+		sha256: sha256$1,
+		sha384: sha384$1,
+		sha512: sha512$1
+	};
+
+	'use strict';
+
+
+
+
+	var rotl32$5 = utils$1.rotl32;
+	var sum32$7 = utils$1.sum32;
+	var sum32_3$3 = utils$1.sum32_3;
+	var sum32_4$5 = utils$1.sum32_4;
+	var BlockHash$9 = common$2.BlockHash;
+
+	function RIPEMD160$1() {
+	  if (!(this instanceof RIPEMD160$1))
+	    return new RIPEMD160$1();
+
+	  BlockHash$9.call(this);
+
+	  this.h = [ 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0 ];
+	  this.endian = 'little';
+	}
+	utils$1.inherits(RIPEMD160$1, BlockHash$9);
+	var ripemd160$1 = RIPEMD160$1;
+
+	RIPEMD160$1.blockSize = 512;
+	RIPEMD160$1.outSize = 160;
+	RIPEMD160$1.hmacStrength = 192;
+	RIPEMD160$1.padLength = 64;
+
+	RIPEMD160$1.prototype._update = function update(msg, start) {
+	  var A = this.h[0];
+	  var B = this.h[1];
+	  var C = this.h[2];
+	  var D = this.h[3];
+	  var E = this.h[4];
+	  var Ah = A;
+	  var Bh = B;
+	  var Ch = C;
+	  var Dh = D;
+	  var Eh = E;
+	  for (var j = 0; j < 80; j++) {
+	    var T = sum32$7(
+	      rotl32$5(
+	        sum32_4$5(A, f$1(j, B, C, D), msg[r$1[j] + start], K$1(j)),
+	        s$1[j]),
+	      E);
+	    A = E;
+	    E = D;
+	    D = rotl32$5(C, 10);
+	    C = B;
+	    B = T;
+	    T = sum32$7(
+	      rotl32$5(
+	        sum32_4$5(Ah, f$1(79 - j, Bh, Ch, Dh), msg[rh$1[j] + start], Kh$1(j)),
+	        sh$1[j]),
+	      Eh);
+	    Ah = Eh;
+	    Eh = Dh;
+	    Dh = rotl32$5(Ch, 10);
+	    Ch = Bh;
+	    Bh = T;
+	  }
+	  T = sum32_3$3(this.h[1], C, Dh);
+	  this.h[1] = sum32_3$3(this.h[2], D, Eh);
+	  this.h[2] = sum32_3$3(this.h[3], E, Ah);
+	  this.h[3] = sum32_3$3(this.h[4], A, Bh);
+	  this.h[4] = sum32_3$3(this.h[0], B, Ch);
+	  this.h[0] = T;
+	};
+
+	RIPEMD160$1.prototype._digest = function digest(enc) {
+	  if (enc === 'hex')
+	    return utils$1.toHex32(this.h, 'little');
+	  else
+	    return utils$1.split32(this.h, 'little');
+	};
+
+	function f$1(j, x, y, z) {
+	  if (j <= 15)
+	    return x ^ y ^ z;
+	  else if (j <= 31)
+	    return (x & y) | ((~x) & z);
+	  else if (j <= 47)
+	    return (x | (~y)) ^ z;
+	  else if (j <= 63)
+	    return (x & z) | (y & (~z));
+	  else
+	    return x ^ (y | (~z));
+	}
+
+	function K$1(j) {
+	  if (j <= 15)
+	    return 0x00000000;
+	  else if (j <= 31)
+	    return 0x5a827999;
+	  else if (j <= 47)
+	    return 0x6ed9eba1;
+	  else if (j <= 63)
+	    return 0x8f1bbcdc;
+	  else
+	    return 0xa953fd4e;
+	}
+
+	function Kh$1(j) {
+	  if (j <= 15)
+	    return 0x50a28be6;
+	  else if (j <= 31)
+	    return 0x5c4dd124;
+	  else if (j <= 47)
+	    return 0x6d703ef3;
+	  else if (j <= 63)
+	    return 0x7a6d76e9;
+	  else
+	    return 0x00000000;
+	}
+
+	var r$1 = [
+	  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+	  7, 4, 13, 1, 10, 6, 15, 3, 12, 0, 9, 5, 2, 14, 11, 8,
+	  3, 10, 14, 4, 9, 15, 8, 1, 2, 7, 0, 6, 13, 11, 5, 12,
+	  1, 9, 11, 10, 0, 8, 12, 4, 13, 3, 7, 15, 14, 5, 6, 2,
+	  4, 0, 5, 9, 7, 12, 2, 10, 14, 1, 3, 8, 11, 6, 15, 13
+	];
+
+	var rh$1 = [
+	  5, 14, 7, 0, 9, 2, 11, 4, 13, 6, 15, 8, 1, 10, 3, 12,
+	  6, 11, 3, 7, 0, 13, 5, 10, 14, 15, 8, 12, 4, 9, 1, 2,
+	  15, 5, 1, 3, 7, 14, 6, 9, 11, 8, 12, 2, 10, 0, 4, 13,
+	  8, 6, 4, 1, 3, 11, 15, 0, 5, 12, 2, 13, 9, 7, 10, 14,
+	  12, 15, 10, 4, 1, 5, 8, 7, 6, 2, 13, 14, 0, 3, 9, 11
+	];
+
+	var s$1 = [
+	  11, 14, 15, 12, 5, 8, 7, 9, 11, 13, 14, 15, 6, 7, 9, 8,
+	  7, 6, 8, 13, 11, 9, 7, 15, 7, 12, 15, 9, 11, 7, 13, 12,
+	  11, 13, 6, 7, 14, 9, 13, 15, 14, 8, 13, 6, 5, 12, 7, 5,
+	  11, 12, 14, 15, 14, 15, 9, 8, 9, 14, 5, 6, 8, 6, 5, 12,
+	  9, 15, 5, 11, 6, 8, 13, 12, 5, 12, 13, 14, 11, 8, 5, 6
+	];
+
+	var sh$1 = [
+	  8, 9, 9, 11, 13, 15, 15, 5, 7, 7, 8, 11, 14, 14, 12, 6,
+	  9, 13, 15, 7, 12, 8, 9, 11, 7, 7, 12, 7, 6, 15, 13, 11,
+	  9, 7, 15, 11, 8, 6, 6, 14, 12, 13, 5, 14, 13, 13, 7, 5,
+	  15, 5, 8, 11, 14, 14, 6, 14, 6, 9, 12, 9, 12, 5, 15, 8,
+	  8, 5, 12, 9, 12, 5, 14, 6, 8, 13, 6, 5, 15, 13, 11, 11
+	];
+
+	var ripemd$1 = {
+		ripemd160: ripemd160$1
+	};
+
+	'use strict';
+
+
+
+
+	function Hmac$1(hash, key, enc) {
+	  if (!(this instanceof Hmac$1))
+	    return new Hmac$1(hash, key, enc);
+	  this.Hash = hash;
+	  this.blockSize = hash.blockSize / 8;
+	  this.outSize = hash.outSize / 8;
+	  this.inner = null;
+	  this.outer = null;
+
+	  this._init(utils$1.toArray(key, enc));
+	}
+	var hmac$1 = Hmac$1;
+
+	Hmac$1.prototype._init = function init(key) {
+	  // Shorten key, if needed
+	  if (key.length > this.blockSize)
+	    key = new this.Hash().update(key).digest();
+	  minimalisticAssert(key.length <= this.blockSize);
+
+	  // Add padding to key
+	  for (var i = key.length; i < this.blockSize; i++)
+	    key.push(0);
+
+	  for (i = 0; i < key.length; i++)
+	    key[i] ^= 0x36;
+	  this.inner = new this.Hash().update(key);
+
+	  // 0x36 ^ 0x5c = 0x6a
+	  for (i = 0; i < key.length; i++)
+	    key[i] ^= 0x6a;
+	  this.outer = new this.Hash().update(key);
+	};
+
+	Hmac$1.prototype.update = function update(msg, enc) {
+	  this.inner.update(msg, enc);
+	  return this;
+	};
+
+	Hmac$1.prototype.digest = function digest(enc) {
+	  this.outer.update(this.inner.digest());
+	  return this.outer.digest(enc);
+	};
+
+	var hash_1$1 = createCommonjsModule(function (module, exports) {
+	var hash = exports;
+
+	hash.utils = utils$1;
+	hash.common = common$2;
+	hash.sha = sha$1;
+	hash.ripemd = ripemd$1;
+	hash.hmac = hmac$1;
+
+	// Proxy hash functions to the main object
+	hash.sha1 = hash.sha.sha1;
+	hash.sha256 = hash.sha.sha256;
+	hash.sha224 = hash.sha.sha224;
+	hash.sha384 = hash.sha.sha384;
+	hash.sha512 = hash.sha.sha512;
+	hash.ripemd160 = hash.ripemd.ripemd160;
+	});
+
+	'use strict';
+
+
+
+
 
 	function HmacDRBG(options) {
 	  if (!(this instanceof HmacDRBG))
@@ -13106,7 +14408,7 @@
 	};
 
 	HmacDRBG.prototype._hmac = function hmac() {
-	  return new hash_1.hmac(this.hash, this.K);
+	  return new hash_1$1.hmac(this.hash, this.K);
 	};
 
 	HmacDRBG.prototype._update = function update(seed) {
@@ -15493,6 +16795,1258 @@
 
 	var index$g = /*@__PURE__*/getDefaultExportFromCjs(lib$g);
 
+	'use strict';
+
+
+
+
+	var inherits_1$2 = inherits_browser;
+
+	function toArray$2(msg, enc) {
+	  if (Array.isArray(msg))
+	    return msg.slice();
+	  if (!msg)
+	    return [];
+	  var res = [];
+	  if (typeof msg === 'string') {
+	    if (!enc) {
+	      for (var i = 0; i < msg.length; i++) {
+	        var c = msg.charCodeAt(i);
+	        var hi = c >> 8;
+	        var lo = c & 0xff;
+	        if (hi)
+	          res.push(hi, lo);
+	        else
+	          res.push(lo);
+	      }
+	    } else if (enc === 'hex') {
+	      msg = msg.replace(/[^a-z0-9]+/ig, '');
+	      if (msg.length % 2 !== 0)
+	        msg = '0' + msg;
+	      for (i = 0; i < msg.length; i += 2)
+	        res.push(parseInt(msg[i] + msg[i + 1], 16));
+	    }
+	  } else {
+	    for (i = 0; i < msg.length; i++)
+	      res[i] = msg[i] | 0;
+	  }
+	  return res;
+	}
+	var toArray_1$2 = toArray$2;
+
+	function toHex$2(msg) {
+	  var res = '';
+	  for (var i = 0; i < msg.length; i++)
+	    res += zero2$2(msg[i].toString(16));
+	  return res;
+	}
+	var toHex_1$2 = toHex$2;
+
+	function htonl$2(w) {
+	  var res = (w >>> 24) |
+	            ((w >>> 8) & 0xff00) |
+	            ((w << 8) & 0xff0000) |
+	            ((w & 0xff) << 24);
+	  return res >>> 0;
+	}
+	var htonl_1$2 = htonl$2;
+
+	function toHex32$2(msg, endian) {
+	  var res = '';
+	  for (var i = 0; i < msg.length; i++) {
+	    var w = msg[i];
+	    if (endian === 'little')
+	      w = htonl$2(w);
+	    res += zero8$2(w.toString(16));
+	  }
+	  return res;
+	}
+	var toHex32_1$2 = toHex32$2;
+
+	function zero2$2(word) {
+	  if (word.length === 1)
+	    return '0' + word;
+	  else
+	    return word;
+	}
+	var zero2_1$2 = zero2$2;
+
+	function zero8$2(word) {
+	  if (word.length === 7)
+	    return '0' + word;
+	  else if (word.length === 6)
+	    return '00' + word;
+	  else if (word.length === 5)
+	    return '000' + word;
+	  else if (word.length === 4)
+	    return '0000' + word;
+	  else if (word.length === 3)
+	    return '00000' + word;
+	  else if (word.length === 2)
+	    return '000000' + word;
+	  else if (word.length === 1)
+	    return '0000000' + word;
+	  else
+	    return word;
+	}
+	var zero8_1$2 = zero8$2;
+
+	function join32$2(msg, start, end, endian) {
+	  var len = end - start;
+	  minimalisticAssert(len % 4 === 0);
+	  var res = new Array(len / 4);
+	  for (var i = 0, k = start; i < res.length; i++, k += 4) {
+	    var w;
+	    if (endian === 'big')
+	      w = (msg[k] << 24) | (msg[k + 1] << 16) | (msg[k + 2] << 8) | msg[k + 3];
+	    else
+	      w = (msg[k + 3] << 24) | (msg[k + 2] << 16) | (msg[k + 1] << 8) | msg[k];
+	    res[i] = w >>> 0;
+	  }
+	  return res;
+	}
+	var join32_1$2 = join32$2;
+
+	function split32$2(msg, endian) {
+	  var res = new Array(msg.length * 4);
+	  for (var i = 0, k = 0; i < msg.length; i++, k += 4) {
+	    var m = msg[i];
+	    if (endian === 'big') {
+	      res[k] = m >>> 24;
+	      res[k + 1] = (m >>> 16) & 0xff;
+	      res[k + 2] = (m >>> 8) & 0xff;
+	      res[k + 3] = m & 0xff;
+	    } else {
+	      res[k + 3] = m >>> 24;
+	      res[k + 2] = (m >>> 16) & 0xff;
+	      res[k + 1] = (m >>> 8) & 0xff;
+	      res[k] = m & 0xff;
+	    }
+	  }
+	  return res;
+	}
+	var split32_1$2 = split32$2;
+
+	function rotr32$4(w, b) {
+	  return (w >>> b) | (w << (32 - b));
+	}
+	var rotr32_1$2 = rotr32$4;
+
+	function rotl32$6(w, b) {
+	  return (w << b) | (w >>> (32 - b));
+	}
+	var rotl32_1$2 = rotl32$6;
+
+	function sum32$8(a, b) {
+	  return (a + b) >>> 0;
+	}
+	var sum32_1$2 = sum32$8;
+
+	function sum32_3$4(a, b, c) {
+	  return (a + b + c) >>> 0;
+	}
+	var sum32_3_1$2 = sum32_3$4;
+
+	function sum32_4$6(a, b, c, d) {
+	  return (a + b + c + d) >>> 0;
+	}
+	var sum32_4_1$2 = sum32_4$6;
+
+	function sum32_5$6(a, b, c, d, e) {
+	  return (a + b + c + d + e) >>> 0;
+	}
+	var sum32_5_1$2 = sum32_5$6;
+
+	function sum64$4(buf, pos, ah, al) {
+	  var bh = buf[pos];
+	  var bl = buf[pos + 1];
+
+	  var lo = (al + bl) >>> 0;
+	  var hi = (lo < al ? 1 : 0) + ah + bh;
+	  buf[pos] = hi >>> 0;
+	  buf[pos + 1] = lo;
+	}
+	var sum64_1$2 = sum64$4;
+
+	function sum64_hi$4(ah, al, bh, bl) {
+	  var lo = (al + bl) >>> 0;
+	  var hi = (lo < al ? 1 : 0) + ah + bh;
+	  return hi >>> 0;
+	}
+	var sum64_hi_1$2 = sum64_hi$4;
+
+	function sum64_lo$4(ah, al, bh, bl) {
+	  var lo = al + bl;
+	  return lo >>> 0;
+	}
+	var sum64_lo_1$2 = sum64_lo$4;
+
+	function sum64_4_hi$4(ah, al, bh, bl, ch, cl, dh, dl) {
+	  var carry = 0;
+	  var lo = al;
+	  lo = (lo + bl) >>> 0;
+	  carry += lo < al ? 1 : 0;
+	  lo = (lo + cl) >>> 0;
+	  carry += lo < cl ? 1 : 0;
+	  lo = (lo + dl) >>> 0;
+	  carry += lo < dl ? 1 : 0;
+
+	  var hi = ah + bh + ch + dh + carry;
+	  return hi >>> 0;
+	}
+	var sum64_4_hi_1$2 = sum64_4_hi$4;
+
+	function sum64_4_lo$4(ah, al, bh, bl, ch, cl, dh, dl) {
+	  var lo = al + bl + cl + dl;
+	  return lo >>> 0;
+	}
+	var sum64_4_lo_1$2 = sum64_4_lo$4;
+
+	function sum64_5_hi$4(ah, al, bh, bl, ch, cl, dh, dl, eh, el) {
+	  var carry = 0;
+	  var lo = al;
+	  lo = (lo + bl) >>> 0;
+	  carry += lo < al ? 1 : 0;
+	  lo = (lo + cl) >>> 0;
+	  carry += lo < cl ? 1 : 0;
+	  lo = (lo + dl) >>> 0;
+	  carry += lo < dl ? 1 : 0;
+	  lo = (lo + el) >>> 0;
+	  carry += lo < el ? 1 : 0;
+
+	  var hi = ah + bh + ch + dh + eh + carry;
+	  return hi >>> 0;
+	}
+	var sum64_5_hi_1$2 = sum64_5_hi$4;
+
+	function sum64_5_lo$4(ah, al, bh, bl, ch, cl, dh, dl, eh, el) {
+	  var lo = al + bl + cl + dl + el;
+
+	  return lo >>> 0;
+	}
+	var sum64_5_lo_1$2 = sum64_5_lo$4;
+
+	function rotr64_hi$4(ah, al, num) {
+	  var r = (al << (32 - num)) | (ah >>> num);
+	  return r >>> 0;
+	}
+	var rotr64_hi_1$2 = rotr64_hi$4;
+
+	function rotr64_lo$4(ah, al, num) {
+	  var r = (ah << (32 - num)) | (al >>> num);
+	  return r >>> 0;
+	}
+	var rotr64_lo_1$2 = rotr64_lo$4;
+
+	function shr64_hi$4(ah, al, num) {
+	  return ah >>> num;
+	}
+	var shr64_hi_1$2 = shr64_hi$4;
+
+	function shr64_lo$4(ah, al, num) {
+	  var r = (ah << (32 - num)) | (al >>> num);
+	  return r >>> 0;
+	}
+	var shr64_lo_1$2 = shr64_lo$4;
+
+	var utils$2 = {
+		inherits: inherits_1$2,
+		toArray: toArray_1$2,
+		toHex: toHex_1$2,
+		htonl: htonl_1$2,
+		toHex32: toHex32_1$2,
+		zero2: zero2_1$2,
+		zero8: zero8_1$2,
+		join32: join32_1$2,
+		split32: split32_1$2,
+		rotr32: rotr32_1$2,
+		rotl32: rotl32_1$2,
+		sum32: sum32_1$2,
+		sum32_3: sum32_3_1$2,
+		sum32_4: sum32_4_1$2,
+		sum32_5: sum32_5_1$2,
+		sum64: sum64_1$2,
+		sum64_hi: sum64_hi_1$2,
+		sum64_lo: sum64_lo_1$2,
+		sum64_4_hi: sum64_4_hi_1$2,
+		sum64_4_lo: sum64_4_lo_1$2,
+		sum64_5_hi: sum64_5_hi_1$2,
+		sum64_5_lo: sum64_5_lo_1$2,
+		rotr64_hi: rotr64_hi_1$2,
+		rotr64_lo: rotr64_lo_1$2,
+		shr64_hi: shr64_hi_1$2,
+		shr64_lo: shr64_lo_1$2
+	};
+
+	'use strict';
+
+
+
+
+	function BlockHash$a() {
+	  this.pending = null;
+	  this.pendingTotal = 0;
+	  this.blockSize = this.constructor.blockSize;
+	  this.outSize = this.constructor.outSize;
+	  this.hmacStrength = this.constructor.hmacStrength;
+	  this.padLength = this.constructor.padLength / 8;
+	  this.endian = 'big';
+
+	  this._delta8 = this.blockSize / 8;
+	  this._delta32 = this.blockSize / 32;
+	}
+	var BlockHash_1$2 = BlockHash$a;
+
+	BlockHash$a.prototype.update = function update(msg, enc) {
+	  // Convert message to array, pad it, and join into 32bit blocks
+	  msg = utils$2.toArray(msg, enc);
+	  if (!this.pending)
+	    this.pending = msg;
+	  else
+	    this.pending = this.pending.concat(msg);
+	  this.pendingTotal += msg.length;
+
+	  // Enough data, try updating
+	  if (this.pending.length >= this._delta8) {
+	    msg = this.pending;
+
+	    // Process pending data in blocks
+	    var r = msg.length % this._delta8;
+	    this.pending = msg.slice(msg.length - r, msg.length);
+	    if (this.pending.length === 0)
+	      this.pending = null;
+
+	    msg = utils$2.join32(msg, 0, msg.length - r, this.endian);
+	    for (var i = 0; i < msg.length; i += this._delta32)
+	      this._update(msg, i, i + this._delta32);
+	  }
+
+	  return this;
+	};
+
+	BlockHash$a.prototype.digest = function digest(enc) {
+	  this.update(this._pad());
+	  minimalisticAssert(this.pending === null);
+
+	  return this._digest(enc);
+	};
+
+	BlockHash$a.prototype._pad = function pad() {
+	  var len = this.pendingTotal;
+	  var bytes = this._delta8;
+	  var k = bytes - ((len + this.padLength) % bytes);
+	  var res = new Array(k + this.padLength);
+	  res[0] = 0x80;
+	  for (var i = 1; i < k; i++)
+	    res[i] = 0;
+
+	  // Append length
+	  len <<= 3;
+	  if (this.endian === 'big') {
+	    for (var t = 8; t < this.padLength; t++)
+	      res[i++] = 0;
+
+	    res[i++] = 0;
+	    res[i++] = 0;
+	    res[i++] = 0;
+	    res[i++] = 0;
+	    res[i++] = (len >>> 24) & 0xff;
+	    res[i++] = (len >>> 16) & 0xff;
+	    res[i++] = (len >>> 8) & 0xff;
+	    res[i++] = len & 0xff;
+	  } else {
+	    res[i++] = len & 0xff;
+	    res[i++] = (len >>> 8) & 0xff;
+	    res[i++] = (len >>> 16) & 0xff;
+	    res[i++] = (len >>> 24) & 0xff;
+	    res[i++] = 0;
+	    res[i++] = 0;
+	    res[i++] = 0;
+	    res[i++] = 0;
+
+	    for (t = 8; t < this.padLength; t++)
+	      res[i++] = 0;
+	  }
+
+	  return res;
+	};
+
+	var common$4 = {
+		BlockHash: BlockHash_1$2
+	};
+
+	'use strict';
+
+
+	var rotr32$5 = utils$2.rotr32;
+
+	function ft_1$4(s, x, y, z) {
+	  if (s === 0)
+	    return ch32$4(x, y, z);
+	  if (s === 1 || s === 3)
+	    return p32$2(x, y, z);
+	  if (s === 2)
+	    return maj32$4(x, y, z);
+	}
+	var ft_1_1$2 = ft_1$4;
+
+	function ch32$4(x, y, z) {
+	  return (x & y) ^ ((~x) & z);
+	}
+	var ch32_1$2 = ch32$4;
+
+	function maj32$4(x, y, z) {
+	  return (x & y) ^ (x & z) ^ (y & z);
+	}
+	var maj32_1$2 = maj32$4;
+
+	function p32$2(x, y, z) {
+	  return x ^ y ^ z;
+	}
+	var p32_1$2 = p32$2;
+
+	function s0_256$4(x) {
+	  return rotr32$5(x, 2) ^ rotr32$5(x, 13) ^ rotr32$5(x, 22);
+	}
+	var s0_256_1$2 = s0_256$4;
+
+	function s1_256$4(x) {
+	  return rotr32$5(x, 6) ^ rotr32$5(x, 11) ^ rotr32$5(x, 25);
+	}
+	var s1_256_1$2 = s1_256$4;
+
+	function g0_256$4(x) {
+	  return rotr32$5(x, 7) ^ rotr32$5(x, 18) ^ (x >>> 3);
+	}
+	var g0_256_1$2 = g0_256$4;
+
+	function g1_256$4(x) {
+	  return rotr32$5(x, 17) ^ rotr32$5(x, 19) ^ (x >>> 10);
+	}
+	var g1_256_1$2 = g1_256$4;
+
+	var common$5 = {
+		ft_1: ft_1_1$2,
+		ch32: ch32_1$2,
+		maj32: maj32_1$2,
+		p32: p32_1$2,
+		s0_256: s0_256_1$2,
+		s1_256: s1_256_1$2,
+		g0_256: g0_256_1$2,
+		g1_256: g1_256_1$2
+	};
+
+	'use strict';
+
+
+
+
+
+	var rotl32$7 = utils$2.rotl32;
+	var sum32$9 = utils$2.sum32;
+	var sum32_5$7 = utils$2.sum32_5;
+	var ft_1$5 = common$5.ft_1;
+	var BlockHash$b = common$4.BlockHash;
+
+	var sha1_K$2 = [
+	  0x5A827999, 0x6ED9EBA1,
+	  0x8F1BBCDC, 0xCA62C1D6
+	];
+
+	function SHA1$2() {
+	  if (!(this instanceof SHA1$2))
+	    return new SHA1$2();
+
+	  BlockHash$b.call(this);
+	  this.h = [
+	    0x67452301, 0xefcdab89, 0x98badcfe,
+	    0x10325476, 0xc3d2e1f0 ];
+	  this.W = new Array(80);
+	}
+
+	utils$2.inherits(SHA1$2, BlockHash$b);
+	var _1$2 = SHA1$2;
+
+	SHA1$2.blockSize = 512;
+	SHA1$2.outSize = 160;
+	SHA1$2.hmacStrength = 80;
+	SHA1$2.padLength = 64;
+
+	SHA1$2.prototype._update = function _update(msg, start) {
+	  var W = this.W;
+
+	  for (var i = 0; i < 16; i++)
+	    W[i] = msg[start + i];
+
+	  for(; i < W.length; i++)
+	    W[i] = rotl32$7(W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16], 1);
+
+	  var a = this.h[0];
+	  var b = this.h[1];
+	  var c = this.h[2];
+	  var d = this.h[3];
+	  var e = this.h[4];
+
+	  for (i = 0; i < W.length; i++) {
+	    var s = ~~(i / 20);
+	    var t = sum32_5$7(rotl32$7(a, 5), ft_1$5(s, b, c, d), e, W[i], sha1_K$2[s]);
+	    e = d;
+	    d = c;
+	    c = rotl32$7(b, 30);
+	    b = a;
+	    a = t;
+	  }
+
+	  this.h[0] = sum32$9(this.h[0], a);
+	  this.h[1] = sum32$9(this.h[1], b);
+	  this.h[2] = sum32$9(this.h[2], c);
+	  this.h[3] = sum32$9(this.h[3], d);
+	  this.h[4] = sum32$9(this.h[4], e);
+	};
+
+	SHA1$2.prototype._digest = function digest(enc) {
+	  if (enc === 'hex')
+	    return utils$2.toHex32(this.h, 'big');
+	  else
+	    return utils$2.split32(this.h, 'big');
+	};
+
+	'use strict';
+
+
+
+
+
+
+	var sum32$a = utils$2.sum32;
+	var sum32_4$7 = utils$2.sum32_4;
+	var sum32_5$8 = utils$2.sum32_5;
+	var ch32$5 = common$5.ch32;
+	var maj32$5 = common$5.maj32;
+	var s0_256$5 = common$5.s0_256;
+	var s1_256$5 = common$5.s1_256;
+	var g0_256$5 = common$5.g0_256;
+	var g1_256$5 = common$5.g1_256;
+
+	var BlockHash$c = common$4.BlockHash;
+
+	var sha256_K$2 = [
+	  0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
+	  0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+	  0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
+	  0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+	  0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
+	  0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+	  0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
+	  0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+	  0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
+	  0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+	  0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3,
+	  0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+	  0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5,
+	  0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+	  0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
+	  0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+	];
+
+	function SHA256$2() {
+	  if (!(this instanceof SHA256$2))
+	    return new SHA256$2();
+
+	  BlockHash$c.call(this);
+	  this.h = [
+	    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+	    0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
+	  ];
+	  this.k = sha256_K$2;
+	  this.W = new Array(64);
+	}
+	utils$2.inherits(SHA256$2, BlockHash$c);
+	var _256$2 = SHA256$2;
+
+	SHA256$2.blockSize = 512;
+	SHA256$2.outSize = 256;
+	SHA256$2.hmacStrength = 192;
+	SHA256$2.padLength = 64;
+
+	SHA256$2.prototype._update = function _update(msg, start) {
+	  var W = this.W;
+
+	  for (var i = 0; i < 16; i++)
+	    W[i] = msg[start + i];
+	  for (; i < W.length; i++)
+	    W[i] = sum32_4$7(g1_256$5(W[i - 2]), W[i - 7], g0_256$5(W[i - 15]), W[i - 16]);
+
+	  var a = this.h[0];
+	  var b = this.h[1];
+	  var c = this.h[2];
+	  var d = this.h[3];
+	  var e = this.h[4];
+	  var f = this.h[5];
+	  var g = this.h[6];
+	  var h = this.h[7];
+
+	  minimalisticAssert(this.k.length === W.length);
+	  for (i = 0; i < W.length; i++) {
+	    var T1 = sum32_5$8(h, s1_256$5(e), ch32$5(e, f, g), this.k[i], W[i]);
+	    var T2 = sum32$a(s0_256$5(a), maj32$5(a, b, c));
+	    h = g;
+	    g = f;
+	    f = e;
+	    e = sum32$a(d, T1);
+	    d = c;
+	    c = b;
+	    b = a;
+	    a = sum32$a(T1, T2);
+	  }
+
+	  this.h[0] = sum32$a(this.h[0], a);
+	  this.h[1] = sum32$a(this.h[1], b);
+	  this.h[2] = sum32$a(this.h[2], c);
+	  this.h[3] = sum32$a(this.h[3], d);
+	  this.h[4] = sum32$a(this.h[4], e);
+	  this.h[5] = sum32$a(this.h[5], f);
+	  this.h[6] = sum32$a(this.h[6], g);
+	  this.h[7] = sum32$a(this.h[7], h);
+	};
+
+	SHA256$2.prototype._digest = function digest(enc) {
+	  if (enc === 'hex')
+	    return utils$2.toHex32(this.h, 'big');
+	  else
+	    return utils$2.split32(this.h, 'big');
+	};
+
+	'use strict';
+
+
+
+
+	function SHA224$2() {
+	  if (!(this instanceof SHA224$2))
+	    return new SHA224$2();
+
+	  _256$2.call(this);
+	  this.h = [
+	    0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939,
+	    0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4 ];
+	}
+	utils$2.inherits(SHA224$2, _256$2);
+	var _224$2 = SHA224$2;
+
+	SHA224$2.blockSize = 512;
+	SHA224$2.outSize = 224;
+	SHA224$2.hmacStrength = 192;
+	SHA224$2.padLength = 64;
+
+	SHA224$2.prototype._digest = function digest(enc) {
+	  // Just truncate output
+	  if (enc === 'hex')
+	    return utils$2.toHex32(this.h.slice(0, 7), 'big');
+	  else
+	    return utils$2.split32(this.h.slice(0, 7), 'big');
+	};
+
+	'use strict';
+
+
+
+
+
+	var rotr64_hi$5 = utils$2.rotr64_hi;
+	var rotr64_lo$5 = utils$2.rotr64_lo;
+	var shr64_hi$5 = utils$2.shr64_hi;
+	var shr64_lo$5 = utils$2.shr64_lo;
+	var sum64$5 = utils$2.sum64;
+	var sum64_hi$5 = utils$2.sum64_hi;
+	var sum64_lo$5 = utils$2.sum64_lo;
+	var sum64_4_hi$5 = utils$2.sum64_4_hi;
+	var sum64_4_lo$5 = utils$2.sum64_4_lo;
+	var sum64_5_hi$5 = utils$2.sum64_5_hi;
+	var sum64_5_lo$5 = utils$2.sum64_5_lo;
+
+	var BlockHash$d = common$4.BlockHash;
+
+	var sha512_K$2 = [
+	  0x428a2f98, 0xd728ae22, 0x71374491, 0x23ef65cd,
+	  0xb5c0fbcf, 0xec4d3b2f, 0xe9b5dba5, 0x8189dbbc,
+	  0x3956c25b, 0xf348b538, 0x59f111f1, 0xb605d019,
+	  0x923f82a4, 0xaf194f9b, 0xab1c5ed5, 0xda6d8118,
+	  0xd807aa98, 0xa3030242, 0x12835b01, 0x45706fbe,
+	  0x243185be, 0x4ee4b28c, 0x550c7dc3, 0xd5ffb4e2,
+	  0x72be5d74, 0xf27b896f, 0x80deb1fe, 0x3b1696b1,
+	  0x9bdc06a7, 0x25c71235, 0xc19bf174, 0xcf692694,
+	  0xe49b69c1, 0x9ef14ad2, 0xefbe4786, 0x384f25e3,
+	  0x0fc19dc6, 0x8b8cd5b5, 0x240ca1cc, 0x77ac9c65,
+	  0x2de92c6f, 0x592b0275, 0x4a7484aa, 0x6ea6e483,
+	  0x5cb0a9dc, 0xbd41fbd4, 0x76f988da, 0x831153b5,
+	  0x983e5152, 0xee66dfab, 0xa831c66d, 0x2db43210,
+	  0xb00327c8, 0x98fb213f, 0xbf597fc7, 0xbeef0ee4,
+	  0xc6e00bf3, 0x3da88fc2, 0xd5a79147, 0x930aa725,
+	  0x06ca6351, 0xe003826f, 0x14292967, 0x0a0e6e70,
+	  0x27b70a85, 0x46d22ffc, 0x2e1b2138, 0x5c26c926,
+	  0x4d2c6dfc, 0x5ac42aed, 0x53380d13, 0x9d95b3df,
+	  0x650a7354, 0x8baf63de, 0x766a0abb, 0x3c77b2a8,
+	  0x81c2c92e, 0x47edaee6, 0x92722c85, 0x1482353b,
+	  0xa2bfe8a1, 0x4cf10364, 0xa81a664b, 0xbc423001,
+	  0xc24b8b70, 0xd0f89791, 0xc76c51a3, 0x0654be30,
+	  0xd192e819, 0xd6ef5218, 0xd6990624, 0x5565a910,
+	  0xf40e3585, 0x5771202a, 0x106aa070, 0x32bbd1b8,
+	  0x19a4c116, 0xb8d2d0c8, 0x1e376c08, 0x5141ab53,
+	  0x2748774c, 0xdf8eeb99, 0x34b0bcb5, 0xe19b48a8,
+	  0x391c0cb3, 0xc5c95a63, 0x4ed8aa4a, 0xe3418acb,
+	  0x5b9cca4f, 0x7763e373, 0x682e6ff3, 0xd6b2b8a3,
+	  0x748f82ee, 0x5defb2fc, 0x78a5636f, 0x43172f60,
+	  0x84c87814, 0xa1f0ab72, 0x8cc70208, 0x1a6439ec,
+	  0x90befffa, 0x23631e28, 0xa4506ceb, 0xde82bde9,
+	  0xbef9a3f7, 0xb2c67915, 0xc67178f2, 0xe372532b,
+	  0xca273ece, 0xea26619c, 0xd186b8c7, 0x21c0c207,
+	  0xeada7dd6, 0xcde0eb1e, 0xf57d4f7f, 0xee6ed178,
+	  0x06f067aa, 0x72176fba, 0x0a637dc5, 0xa2c898a6,
+	  0x113f9804, 0xbef90dae, 0x1b710b35, 0x131c471b,
+	  0x28db77f5, 0x23047d84, 0x32caab7b, 0x40c72493,
+	  0x3c9ebe0a, 0x15c9bebc, 0x431d67c4, 0x9c100d4c,
+	  0x4cc5d4be, 0xcb3e42b6, 0x597f299c, 0xfc657e2a,
+	  0x5fcb6fab, 0x3ad6faec, 0x6c44198c, 0x4a475817
+	];
+
+	function SHA512$2() {
+	  if (!(this instanceof SHA512$2))
+	    return new SHA512$2();
+
+	  BlockHash$d.call(this);
+	  this.h = [
+	    0x6a09e667, 0xf3bcc908,
+	    0xbb67ae85, 0x84caa73b,
+	    0x3c6ef372, 0xfe94f82b,
+	    0xa54ff53a, 0x5f1d36f1,
+	    0x510e527f, 0xade682d1,
+	    0x9b05688c, 0x2b3e6c1f,
+	    0x1f83d9ab, 0xfb41bd6b,
+	    0x5be0cd19, 0x137e2179 ];
+	  this.k = sha512_K$2;
+	  this.W = new Array(160);
+	}
+	utils$2.inherits(SHA512$2, BlockHash$d);
+	var _512$2 = SHA512$2;
+
+	SHA512$2.blockSize = 1024;
+	SHA512$2.outSize = 512;
+	SHA512$2.hmacStrength = 192;
+	SHA512$2.padLength = 128;
+
+	SHA512$2.prototype._prepareBlock = function _prepareBlock(msg, start) {
+	  var W = this.W;
+
+	  // 32 x 32bit words
+	  for (var i = 0; i < 32; i++)
+	    W[i] = msg[start + i];
+	  for (; i < W.length; i += 2) {
+	    var c0_hi = g1_512_hi$2(W[i - 4], W[i - 3]);  // i - 2
+	    var c0_lo = g1_512_lo$2(W[i - 4], W[i - 3]);
+	    var c1_hi = W[i - 14];  // i - 7
+	    var c1_lo = W[i - 13];
+	    var c2_hi = g0_512_hi$2(W[i - 30], W[i - 29]);  // i - 15
+	    var c2_lo = g0_512_lo$2(W[i - 30], W[i - 29]);
+	    var c3_hi = W[i - 32];  // i - 16
+	    var c3_lo = W[i - 31];
+
+	    W[i] = sum64_4_hi$5(
+	      c0_hi, c0_lo,
+	      c1_hi, c1_lo,
+	      c2_hi, c2_lo,
+	      c3_hi, c3_lo);
+	    W[i + 1] = sum64_4_lo$5(
+	      c0_hi, c0_lo,
+	      c1_hi, c1_lo,
+	      c2_hi, c2_lo,
+	      c3_hi, c3_lo);
+	  }
+	};
+
+	SHA512$2.prototype._update = function _update(msg, start) {
+	  this._prepareBlock(msg, start);
+
+	  var W = this.W;
+
+	  var ah = this.h[0];
+	  var al = this.h[1];
+	  var bh = this.h[2];
+	  var bl = this.h[3];
+	  var ch = this.h[4];
+	  var cl = this.h[5];
+	  var dh = this.h[6];
+	  var dl = this.h[7];
+	  var eh = this.h[8];
+	  var el = this.h[9];
+	  var fh = this.h[10];
+	  var fl = this.h[11];
+	  var gh = this.h[12];
+	  var gl = this.h[13];
+	  var hh = this.h[14];
+	  var hl = this.h[15];
+
+	  minimalisticAssert(this.k.length === W.length);
+	  for (var i = 0; i < W.length; i += 2) {
+	    var c0_hi = hh;
+	    var c0_lo = hl;
+	    var c1_hi = s1_512_hi$2(eh, el);
+	    var c1_lo = s1_512_lo$2(eh, el);
+	    var c2_hi = ch64_hi$2(eh, el, fh, fl, gh, gl);
+	    var c2_lo = ch64_lo$2(eh, el, fh, fl, gh, gl);
+	    var c3_hi = this.k[i];
+	    var c3_lo = this.k[i + 1];
+	    var c4_hi = W[i];
+	    var c4_lo = W[i + 1];
+
+	    var T1_hi = sum64_5_hi$5(
+	      c0_hi, c0_lo,
+	      c1_hi, c1_lo,
+	      c2_hi, c2_lo,
+	      c3_hi, c3_lo,
+	      c4_hi, c4_lo);
+	    var T1_lo = sum64_5_lo$5(
+	      c0_hi, c0_lo,
+	      c1_hi, c1_lo,
+	      c2_hi, c2_lo,
+	      c3_hi, c3_lo,
+	      c4_hi, c4_lo);
+
+	    c0_hi = s0_512_hi$2(ah, al);
+	    c0_lo = s0_512_lo$2(ah, al);
+	    c1_hi = maj64_hi$2(ah, al, bh, bl, ch, cl);
+	    c1_lo = maj64_lo$2(ah, al, bh, bl, ch, cl);
+
+	    var T2_hi = sum64_hi$5(c0_hi, c0_lo, c1_hi, c1_lo);
+	    var T2_lo = sum64_lo$5(c0_hi, c0_lo, c1_hi, c1_lo);
+
+	    hh = gh;
+	    hl = gl;
+
+	    gh = fh;
+	    gl = fl;
+
+	    fh = eh;
+	    fl = el;
+
+	    eh = sum64_hi$5(dh, dl, T1_hi, T1_lo);
+	    el = sum64_lo$5(dl, dl, T1_hi, T1_lo);
+
+	    dh = ch;
+	    dl = cl;
+
+	    ch = bh;
+	    cl = bl;
+
+	    bh = ah;
+	    bl = al;
+
+	    ah = sum64_hi$5(T1_hi, T1_lo, T2_hi, T2_lo);
+	    al = sum64_lo$5(T1_hi, T1_lo, T2_hi, T2_lo);
+	  }
+
+	  sum64$5(this.h, 0, ah, al);
+	  sum64$5(this.h, 2, bh, bl);
+	  sum64$5(this.h, 4, ch, cl);
+	  sum64$5(this.h, 6, dh, dl);
+	  sum64$5(this.h, 8, eh, el);
+	  sum64$5(this.h, 10, fh, fl);
+	  sum64$5(this.h, 12, gh, gl);
+	  sum64$5(this.h, 14, hh, hl);
+	};
+
+	SHA512$2.prototype._digest = function digest(enc) {
+	  if (enc === 'hex')
+	    return utils$2.toHex32(this.h, 'big');
+	  else
+	    return utils$2.split32(this.h, 'big');
+	};
+
+	function ch64_hi$2(xh, xl, yh, yl, zh) {
+	  var r = (xh & yh) ^ ((~xh) & zh);
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function ch64_lo$2(xh, xl, yh, yl, zh, zl) {
+	  var r = (xl & yl) ^ ((~xl) & zl);
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function maj64_hi$2(xh, xl, yh, yl, zh) {
+	  var r = (xh & yh) ^ (xh & zh) ^ (yh & zh);
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function maj64_lo$2(xh, xl, yh, yl, zh, zl) {
+	  var r = (xl & yl) ^ (xl & zl) ^ (yl & zl);
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function s0_512_hi$2(xh, xl) {
+	  var c0_hi = rotr64_hi$5(xh, xl, 28);
+	  var c1_hi = rotr64_hi$5(xl, xh, 2);  // 34
+	  var c2_hi = rotr64_hi$5(xl, xh, 7);  // 39
+
+	  var r = c0_hi ^ c1_hi ^ c2_hi;
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function s0_512_lo$2(xh, xl) {
+	  var c0_lo = rotr64_lo$5(xh, xl, 28);
+	  var c1_lo = rotr64_lo$5(xl, xh, 2);  // 34
+	  var c2_lo = rotr64_lo$5(xl, xh, 7);  // 39
+
+	  var r = c0_lo ^ c1_lo ^ c2_lo;
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function s1_512_hi$2(xh, xl) {
+	  var c0_hi = rotr64_hi$5(xh, xl, 14);
+	  var c1_hi = rotr64_hi$5(xh, xl, 18);
+	  var c2_hi = rotr64_hi$5(xl, xh, 9);  // 41
+
+	  var r = c0_hi ^ c1_hi ^ c2_hi;
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function s1_512_lo$2(xh, xl) {
+	  var c0_lo = rotr64_lo$5(xh, xl, 14);
+	  var c1_lo = rotr64_lo$5(xh, xl, 18);
+	  var c2_lo = rotr64_lo$5(xl, xh, 9);  // 41
+
+	  var r = c0_lo ^ c1_lo ^ c2_lo;
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function g0_512_hi$2(xh, xl) {
+	  var c0_hi = rotr64_hi$5(xh, xl, 1);
+	  var c1_hi = rotr64_hi$5(xh, xl, 8);
+	  var c2_hi = shr64_hi$5(xh, xl, 7);
+
+	  var r = c0_hi ^ c1_hi ^ c2_hi;
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function g0_512_lo$2(xh, xl) {
+	  var c0_lo = rotr64_lo$5(xh, xl, 1);
+	  var c1_lo = rotr64_lo$5(xh, xl, 8);
+	  var c2_lo = shr64_lo$5(xh, xl, 7);
+
+	  var r = c0_lo ^ c1_lo ^ c2_lo;
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function g1_512_hi$2(xh, xl) {
+	  var c0_hi = rotr64_hi$5(xh, xl, 19);
+	  var c1_hi = rotr64_hi$5(xl, xh, 29);  // 61
+	  var c2_hi = shr64_hi$5(xh, xl, 6);
+
+	  var r = c0_hi ^ c1_hi ^ c2_hi;
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	function g1_512_lo$2(xh, xl) {
+	  var c0_lo = rotr64_lo$5(xh, xl, 19);
+	  var c1_lo = rotr64_lo$5(xl, xh, 29);  // 61
+	  var c2_lo = shr64_lo$5(xh, xl, 6);
+
+	  var r = c0_lo ^ c1_lo ^ c2_lo;
+	  if (r < 0)
+	    r += 0x100000000;
+	  return r;
+	}
+
+	'use strict';
+
+
+
+
+
+	function SHA384$2() {
+	  if (!(this instanceof SHA384$2))
+	    return new SHA384$2();
+
+	  _512$2.call(this);
+	  this.h = [
+	    0xcbbb9d5d, 0xc1059ed8,
+	    0x629a292a, 0x367cd507,
+	    0x9159015a, 0x3070dd17,
+	    0x152fecd8, 0xf70e5939,
+	    0x67332667, 0xffc00b31,
+	    0x8eb44a87, 0x68581511,
+	    0xdb0c2e0d, 0x64f98fa7,
+	    0x47b5481d, 0xbefa4fa4 ];
+	}
+	utils$2.inherits(SHA384$2, _512$2);
+	var _384$2 = SHA384$2;
+
+	SHA384$2.blockSize = 1024;
+	SHA384$2.outSize = 384;
+	SHA384$2.hmacStrength = 192;
+	SHA384$2.padLength = 128;
+
+	SHA384$2.prototype._digest = function digest(enc) {
+	  if (enc === 'hex')
+	    return utils$2.toHex32(this.h.slice(0, 12), 'big');
+	  else
+	    return utils$2.split32(this.h.slice(0, 12), 'big');
+	};
+
+	'use strict';
+
+	var sha1$2 = _1$2;
+	var sha224$2 = _224$2;
+	var sha256$2 = _256$2;
+	var sha384$2 = _384$2;
+	var sha512$2 = _512$2;
+
+	var sha$2 = {
+		sha1: sha1$2,
+		sha224: sha224$2,
+		sha256: sha256$2,
+		sha384: sha384$2,
+		sha512: sha512$2
+	};
+
+	'use strict';
+
+
+
+
+	var rotl32$8 = utils$2.rotl32;
+	var sum32$b = utils$2.sum32;
+	var sum32_3$5 = utils$2.sum32_3;
+	var sum32_4$8 = utils$2.sum32_4;
+	var BlockHash$e = common$4.BlockHash;
+
+	function RIPEMD160$2() {
+	  if (!(this instanceof RIPEMD160$2))
+	    return new RIPEMD160$2();
+
+	  BlockHash$e.call(this);
+
+	  this.h = [ 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0 ];
+	  this.endian = 'little';
+	}
+	utils$2.inherits(RIPEMD160$2, BlockHash$e);
+	var ripemd160$2 = RIPEMD160$2;
+
+	RIPEMD160$2.blockSize = 512;
+	RIPEMD160$2.outSize = 160;
+	RIPEMD160$2.hmacStrength = 192;
+	RIPEMD160$2.padLength = 64;
+
+	RIPEMD160$2.prototype._update = function update(msg, start) {
+	  var A = this.h[0];
+	  var B = this.h[1];
+	  var C = this.h[2];
+	  var D = this.h[3];
+	  var E = this.h[4];
+	  var Ah = A;
+	  var Bh = B;
+	  var Ch = C;
+	  var Dh = D;
+	  var Eh = E;
+	  for (var j = 0; j < 80; j++) {
+	    var T = sum32$b(
+	      rotl32$8(
+	        sum32_4$8(A, f$2(j, B, C, D), msg[r$2[j] + start], K$2(j)),
+	        s$2[j]),
+	      E);
+	    A = E;
+	    E = D;
+	    D = rotl32$8(C, 10);
+	    C = B;
+	    B = T;
+	    T = sum32$b(
+	      rotl32$8(
+	        sum32_4$8(Ah, f$2(79 - j, Bh, Ch, Dh), msg[rh$2[j] + start], Kh$2(j)),
+	        sh$2[j]),
+	      Eh);
+	    Ah = Eh;
+	    Eh = Dh;
+	    Dh = rotl32$8(Ch, 10);
+	    Ch = Bh;
+	    Bh = T;
+	  }
+	  T = sum32_3$5(this.h[1], C, Dh);
+	  this.h[1] = sum32_3$5(this.h[2], D, Eh);
+	  this.h[2] = sum32_3$5(this.h[3], E, Ah);
+	  this.h[3] = sum32_3$5(this.h[4], A, Bh);
+	  this.h[4] = sum32_3$5(this.h[0], B, Ch);
+	  this.h[0] = T;
+	};
+
+	RIPEMD160$2.prototype._digest = function digest(enc) {
+	  if (enc === 'hex')
+	    return utils$2.toHex32(this.h, 'little');
+	  else
+	    return utils$2.split32(this.h, 'little');
+	};
+
+	function f$2(j, x, y, z) {
+	  if (j <= 15)
+	    return x ^ y ^ z;
+	  else if (j <= 31)
+	    return (x & y) | ((~x) & z);
+	  else if (j <= 47)
+	    return (x | (~y)) ^ z;
+	  else if (j <= 63)
+	    return (x & z) | (y & (~z));
+	  else
+	    return x ^ (y | (~z));
+	}
+
+	function K$2(j) {
+	  if (j <= 15)
+	    return 0x00000000;
+	  else if (j <= 31)
+	    return 0x5a827999;
+	  else if (j <= 47)
+	    return 0x6ed9eba1;
+	  else if (j <= 63)
+	    return 0x8f1bbcdc;
+	  else
+	    return 0xa953fd4e;
+	}
+
+	function Kh$2(j) {
+	  if (j <= 15)
+	    return 0x50a28be6;
+	  else if (j <= 31)
+	    return 0x5c4dd124;
+	  else if (j <= 47)
+	    return 0x6d703ef3;
+	  else if (j <= 63)
+	    return 0x7a6d76e9;
+	  else
+	    return 0x00000000;
+	}
+
+	var r$2 = [
+	  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+	  7, 4, 13, 1, 10, 6, 15, 3, 12, 0, 9, 5, 2, 14, 11, 8,
+	  3, 10, 14, 4, 9, 15, 8, 1, 2, 7, 0, 6, 13, 11, 5, 12,
+	  1, 9, 11, 10, 0, 8, 12, 4, 13, 3, 7, 15, 14, 5, 6, 2,
+	  4, 0, 5, 9, 7, 12, 2, 10, 14, 1, 3, 8, 11, 6, 15, 13
+	];
+
+	var rh$2 = [
+	  5, 14, 7, 0, 9, 2, 11, 4, 13, 6, 15, 8, 1, 10, 3, 12,
+	  6, 11, 3, 7, 0, 13, 5, 10, 14, 15, 8, 12, 4, 9, 1, 2,
+	  15, 5, 1, 3, 7, 14, 6, 9, 11, 8, 12, 2, 10, 0, 4, 13,
+	  8, 6, 4, 1, 3, 11, 15, 0, 5, 12, 2, 13, 9, 7, 10, 14,
+	  12, 15, 10, 4, 1, 5, 8, 7, 6, 2, 13, 14, 0, 3, 9, 11
+	];
+
+	var s$2 = [
+	  11, 14, 15, 12, 5, 8, 7, 9, 11, 13, 14, 15, 6, 7, 9, 8,
+	  7, 6, 8, 13, 11, 9, 7, 15, 7, 12, 15, 9, 11, 7, 13, 12,
+	  11, 13, 6, 7, 14, 9, 13, 15, 14, 8, 13, 6, 5, 12, 7, 5,
+	  11, 12, 14, 15, 14, 15, 9, 8, 9, 14, 5, 6, 8, 6, 5, 12,
+	  9, 15, 5, 11, 6, 8, 13, 12, 5, 12, 13, 14, 11, 8, 5, 6
+	];
+
+	var sh$2 = [
+	  8, 9, 9, 11, 13, 15, 15, 5, 7, 7, 8, 11, 14, 14, 12, 6,
+	  9, 13, 15, 7, 12, 8, 9, 11, 7, 7, 12, 7, 6, 15, 13, 11,
+	  9, 7, 15, 11, 8, 6, 6, 14, 12, 13, 5, 14, 13, 13, 7, 5,
+	  15, 5, 8, 11, 14, 14, 6, 14, 6, 9, 12, 9, 12, 5, 15, 8,
+	  8, 5, 12, 9, 12, 5, 14, 6, 8, 13, 6, 5, 15, 13, 11, 11
+	];
+
+	var ripemd$2 = {
+		ripemd160: ripemd160$2
+	};
+
+	'use strict';
+
+
+
+
+	function Hmac$2(hash, key, enc) {
+	  if (!(this instanceof Hmac$2))
+	    return new Hmac$2(hash, key, enc);
+	  this.Hash = hash;
+	  this.blockSize = hash.blockSize / 8;
+	  this.outSize = hash.outSize / 8;
+	  this.inner = null;
+	  this.outer = null;
+
+	  this._init(utils$2.toArray(key, enc));
+	}
+	var hmac$2 = Hmac$2;
+
+	Hmac$2.prototype._init = function init(key) {
+	  // Shorten key, if needed
+	  if (key.length > this.blockSize)
+	    key = new this.Hash().update(key).digest();
+	  minimalisticAssert(key.length <= this.blockSize);
+
+	  // Add padding to key
+	  for (var i = key.length; i < this.blockSize; i++)
+	    key.push(0);
+
+	  for (i = 0; i < key.length; i++)
+	    key[i] ^= 0x36;
+	  this.inner = new this.Hash().update(key);
+
+	  // 0x36 ^ 0x5c = 0x6a
+	  for (i = 0; i < key.length; i++)
+	    key[i] ^= 0x6a;
+	  this.outer = new this.Hash().update(key);
+	};
+
+	Hmac$2.prototype.update = function update(msg, enc) {
+	  this.inner.update(msg, enc);
+	  return this;
+	};
+
+	Hmac$2.prototype.digest = function digest(enc) {
+	  this.outer.update(this.inner.digest());
+	  return this.outer.digest(enc);
+	};
+
+	var hash_1$2 = createCommonjsModule(function (module, exports) {
+	var hash = exports;
+
+	hash.utils = utils$2;
+	hash.common = common$4;
+	hash.sha = sha$2;
+	hash.ripemd = ripemd$2;
+	hash.hmac = hmac$2;
+
+	// Proxy hash functions to the main object
+	hash.sha1 = hash.sha.sha1;
+	hash.sha256 = hash.sha.sha256;
+	hash.sha224 = hash.sha.sha224;
+	hash.sha384 = hash.sha.sha384;
+	hash.sha512 = hash.sha.sha512;
+	hash.ripemd160 = hash.ripemd.ripemd160;
+	});
+
 	var types = createCommonjsModule(function (module, exports) {
 	"use strict";
 	Object.defineProperty(exports, "__esModule", { value: true });
@@ -15525,7 +18079,7 @@
 	};
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.computeHmac = exports.sha512 = exports.sha256 = exports.ripemd160 = void 0;
-	var hash_js_1 = __importDefault(hash_1);
+	var hash_js_1 = __importDefault(hash_1$2);
 	//const _ripemd160 = _hash.ripemd160;
 
 
@@ -17693,7 +20247,7 @@
 
 	var _version$B = /*@__PURE__*/getDefaultExportFromCjs(_version$A);
 
-	var utils$1 = createCommonjsModule(function (module, exports) {
+	var utils$3 = createCommonjsModule(function (module, exports) {
 	"use strict";
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.uuidV4 = exports.searchPath = exports.getPassword = exports.zpad = exports.looseArrayify = void 0;
@@ -17766,7 +20320,7 @@
 
 	});
 
-	var utils$2 = /*@__PURE__*/getDefaultExportFromCjs(utils$1);
+	var utils$4 = /*@__PURE__*/getDefaultExportFromCjs(utils$3);
 
 	var crowdsale = createCommonjsModule(function (module, exports) {
 	"use strict";
@@ -17815,11 +20369,11 @@
 	// See: https://github.com/ethereum/pyethsaletool
 	function decrypt(json, password) {
 	    var data = JSON.parse(json);
-	    password = utils$1.getPassword(password);
+	    password = utils$3.getPassword(password);
 	    // Ethereum Address
-	    var ethaddr = lib$6.getAddress(utils$1.searchPath(data, "ethaddr"));
+	    var ethaddr = lib$6.getAddress(utils$3.searchPath(data, "ethaddr"));
 	    // Encrypted Seed
-	    var encseed = utils$1.looseArrayify(utils$1.searchPath(data, "encseed"));
+	    var encseed = utils$3.looseArrayify(utils$3.searchPath(data, "encseed"));
 	    if (!encseed || (encseed.length % 16) !== 0) {
 	        logger.throwArgumentError("invalid encseed", "json", json);
 	    }
@@ -18486,9 +21040,9 @@
 	}(lib$3.Description));
 	exports.KeystoreAccount = KeystoreAccount;
 	function _decrypt(data, key, ciphertext) {
-	    var cipher = utils$1.searchPath(data, "crypto/cipher");
+	    var cipher = utils$3.searchPath(data, "crypto/cipher");
 	    if (cipher === "aes-128-ctr") {
-	        var iv = utils$1.looseArrayify(utils$1.searchPath(data, "crypto/cipherparams/iv"));
+	        var iv = utils$3.looseArrayify(utils$3.searchPath(data, "crypto/cipherparams/iv"));
 	        var counter = new aes_js_1.default.Counter(iv);
 	        var aesCtr = new aes_js_1.default.ModeOfOperation.ctr(key, counter);
 	        return lib$1.arrayify(aesCtr.decrypt(ciphertext));
@@ -18496,9 +21050,9 @@
 	    return null;
 	}
 	function _getAccount(data, key) {
-	    var ciphertext = utils$1.looseArrayify(utils$1.searchPath(data, "crypto/ciphertext"));
+	    var ciphertext = utils$3.looseArrayify(utils$3.searchPath(data, "crypto/ciphertext"));
 	    var computedMAC = lib$1.hexlify(lib$4.keccak256(lib$1.concat([key.slice(16, 32), ciphertext]))).substring(2);
-	    if (computedMAC !== utils$1.searchPath(data, "crypto/mac").toLowerCase()) {
+	    if (computedMAC !== utils$3.searchPath(data, "crypto/mac").toLowerCase()) {
 	        throw new Error("invalid password");
 	    }
 	    var privateKey = _decrypt(data, key.slice(0, 16), ciphertext);
@@ -18524,13 +21078,13 @@
 	        privateKey: lib$1.hexlify(privateKey)
 	    };
 	    // Version 0.1 x-ethers metadata must contain an encrypted mnemonic phrase
-	    if (utils$1.searchPath(data, "x-ethers/version") === "0.1") {
-	        var mnemonicCiphertext = utils$1.looseArrayify(utils$1.searchPath(data, "x-ethers/mnemonicCiphertext"));
-	        var mnemonicIv = utils$1.looseArrayify(utils$1.searchPath(data, "x-ethers/mnemonicCounter"));
+	    if (utils$3.searchPath(data, "x-ethers/version") === "0.1") {
+	        var mnemonicCiphertext = utils$3.looseArrayify(utils$3.searchPath(data, "x-ethers/mnemonicCiphertext"));
+	        var mnemonicIv = utils$3.looseArrayify(utils$3.searchPath(data, "x-ethers/mnemonicCounter"));
 	        var mnemonicCounter = new aes_js_1.default.Counter(mnemonicIv);
 	        var mnemonicAesCtr = new aes_js_1.default.ModeOfOperation.ctr(mnemonicKey, mnemonicCounter);
-	        var path = utils$1.searchPath(data, "x-ethers/path") || lib$k.defaultPath;
-	        var locale = utils$1.searchPath(data, "x-ethers/locale") || "en";
+	        var path = utils$3.searchPath(data, "x-ethers/path") || lib$k.defaultPath;
+	        var locale = utils$3.searchPath(data, "x-ethers/locale") || "en";
 	        var entropy = lib$1.arrayify(mnemonicAesCtr.decrypt(mnemonicCiphertext));
 	        try {
 	            var mnemonic = lib$k.entropyToMnemonic(entropy, locale);
@@ -18558,17 +21112,17 @@
 	    return Promise.resolve(pbkdf2Sync(passwordBytes, salt, count, dkLen, prfFunc));
 	}
 	function _computeKdfKey(data, password, pbkdf2Func, scryptFunc, progressCallback) {
-	    var passwordBytes = utils$1.getPassword(password);
-	    var kdf = utils$1.searchPath(data, "crypto/kdf");
+	    var passwordBytes = utils$3.getPassword(password);
+	    var kdf = utils$3.searchPath(data, "crypto/kdf");
 	    if (kdf && typeof (kdf) === "string") {
 	        var throwError = function (name, value) {
 	            return logger.throwArgumentError("invalid key-derivation function parameters", name, value);
 	        };
 	        if (kdf.toLowerCase() === "scrypt") {
-	            var salt = utils$1.looseArrayify(utils$1.searchPath(data, "crypto/kdfparams/salt"));
-	            var N = parseInt(utils$1.searchPath(data, "crypto/kdfparams/n"));
-	            var r = parseInt(utils$1.searchPath(data, "crypto/kdfparams/r"));
-	            var p = parseInt(utils$1.searchPath(data, "crypto/kdfparams/p"));
+	            var salt = utils$3.looseArrayify(utils$3.searchPath(data, "crypto/kdfparams/salt"));
+	            var N = parseInt(utils$3.searchPath(data, "crypto/kdfparams/n"));
+	            var r = parseInt(utils$3.searchPath(data, "crypto/kdfparams/r"));
+	            var p = parseInt(utils$3.searchPath(data, "crypto/kdfparams/p"));
 	            // Check for all required parameters
 	            if (!N || !r || !p) {
 	                throwError("kdf", kdf);
@@ -18577,16 +21131,16 @@
 	            if ((N & (N - 1)) !== 0) {
 	                throwError("N", N);
 	            }
-	            var dkLen = parseInt(utils$1.searchPath(data, "crypto/kdfparams/dklen"));
+	            var dkLen = parseInt(utils$3.searchPath(data, "crypto/kdfparams/dklen"));
 	            if (dkLen !== 32) {
 	                throwError("dklen", dkLen);
 	            }
 	            return scryptFunc(passwordBytes, salt, N, r, p, 64, progressCallback);
 	        }
 	        else if (kdf.toLowerCase() === "pbkdf2") {
-	            var salt = utils$1.looseArrayify(utils$1.searchPath(data, "crypto/kdfparams/salt"));
+	            var salt = utils$3.looseArrayify(utils$3.searchPath(data, "crypto/kdfparams/salt"));
 	            var prfFunc = null;
-	            var prf = utils$1.searchPath(data, "crypto/kdfparams/prf");
+	            var prf = utils$3.searchPath(data, "crypto/kdfparams/prf");
 	            if (prf === "hmac-sha256") {
 	                prfFunc = "sha256";
 	            }
@@ -18596,8 +21150,8 @@
 	            else {
 	                throwError("prf", prf);
 	            }
-	            var count = parseInt(utils$1.searchPath(data, "crypto/kdfparams/c"));
-	            var dkLen = parseInt(utils$1.searchPath(data, "crypto/kdfparams/dklen"));
+	            var count = parseInt(utils$3.searchPath(data, "crypto/kdfparams/c"));
+	            var dkLen = parseInt(utils$3.searchPath(data, "crypto/kdfparams/dklen"));
 	            if (dkLen !== 32) {
 	                throwError("dklen", dkLen);
 	            }
@@ -18655,7 +21209,7 @@
 	        options = {};
 	    }
 	    var privateKey = lib$1.arrayify(account.privateKey);
-	    var passwordBytes = utils$1.getPassword(password);
+	    var passwordBytes = utils$3.getPassword(password);
 	    var entropy = null;
 	    var path = null;
 	    var locale = null;
@@ -18732,7 +21286,7 @@
 	        // See: https://github.com/ethereum/wiki/wiki/Web3-Secret-Storage-Definition
 	        var data = {
 	            address: account.address.substring(2).toLowerCase(),
-	            id: utils$1.uuidV4(uuidRandom),
+	            id: utils$3.uuidV4(uuidRandom),
 	            version: 3,
 	            Crypto: {
 	                cipher: "aes-128-ctr",
@@ -18759,11 +21313,11 @@
 	            var mnemonicCiphertext = lib$1.arrayify(mnemonicAesCtr.encrypt(entropy));
 	            var now = new Date();
 	            var timestamp = (now.getUTCFullYear() + "-" +
-	                utils$1.zpad(now.getUTCMonth() + 1, 2) + "-" +
-	                utils$1.zpad(now.getUTCDate(), 2) + "T" +
-	                utils$1.zpad(now.getUTCHours(), 2) + "-" +
-	                utils$1.zpad(now.getUTCMinutes(), 2) + "-" +
-	                utils$1.zpad(now.getUTCSeconds(), 2) + ".0Z");
+	                utils$3.zpad(now.getUTCMonth() + 1, 2) + "-" +
+	                utils$3.zpad(now.getUTCDate(), 2) + "T" +
+	                utils$3.zpad(now.getUTCHours(), 2) + "-" +
+	                utils$3.zpad(now.getUTCMinutes(), 2) + "-" +
+	                utils$3.zpad(now.getUTCSeconds(), 2) + ".0Z");
 	            data["x-ethers"] = {
 	                client: client,
 	                gethFilename: ("UTC--" + timestamp + "--" + data.address),
@@ -25517,10 +28071,171 @@
 
 	var web3Provider$1 = /*@__PURE__*/getDefaultExportFromCjs(web3Provider);
 
+	var HARMONY_ENDPOINTS = createCommonjsModule(function (module, exports) {
+	"use strict";
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.localnet = exports.testnet = exports.mainnet = void 0;
+	exports.mainnet = [
+	    "rpc.s0.t.hmny.io",
+	    "rpc.s1.t.hmny.io",
+	    "rpc.s2.t.hmny.io",
+	    "rpc.s3.t.hmny.io",
+	];
+	exports.testnet = [
+	    "rpc.s0.b.hmny.io",
+	    "rpc.s1.b.hmny.io",
+	    "rpc.s2.b.hmny.io",
+	    "rpc.s3.b.hmny.io",
+	];
+	exports.localnet = [
+	    "http:/\/localhost:9899",
+	    "http:/\/localhost:9898",
+	];
+
+	});
+
+	var HARMONY_ENDPOINTS$1 = /*@__PURE__*/getDefaultExportFromCjs(HARMONY_ENDPOINTS);
+
+	var harmonyProvider = createCommonjsModule(function (module, exports) {
+	"use strinct";
+	"use strict";
+	var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
+	    var extendStatics = function (d, b) {
+	        extendStatics = Object.setPrototypeOf ||
+	            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+	            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+	        return extendStatics(d, b);
+	    };
+	    return function (d, b) {
+	        if (typeof b !== "function" && b !== null)
+	            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+	        extendStatics(d, b);
+	        function __() { this.constructor = d; }
+	        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	    };
+	})();
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.HarmonyRpcProvider = void 0;
+
+
+
+
+
+
+	var logger = new lib.Logger(_version$I.version);
+	function getLowerCase(value) {
+	    if (value) {
+	        return value.toLowerCase();
+	    }
+	    return value;
+	}
+	var HarmonyRpcProvider = /** @class */ (function (_super) {
+	    __extends(HarmonyRpcProvider, _super);
+	    function HarmonyRpcProvider(url, network) {
+	        var _newTarget = this.constructor;
+	        var _this = this;
+	        logger.checkNew(_newTarget, HarmonyRpcProvider);
+	        _this = _super.call(this, url, network) || this; //TODO
+	        // Default URL
+	        if (!url) {
+	            url = lib$3.getStatic(_this.constructor, "defaultUrl")();
+	        }
+	        if (typeof (url) === "string") {
+	            lib$3.defineReadOnly(_this, "connection", Object.freeze({
+	                url: url
+	            }));
+	        }
+	        else {
+	            lib$3.defineReadOnly(_this, "connection", Object.freeze(lib$3.shallowCopy(url)));
+	        }
+	        _this._nextId = 42;
+	        return _this;
+	    }
+	    HarmonyRpcProvider.defaultUrl = function () {
+	        return HARMONY_ENDPOINTS.localnet[0];
+	    };
+	    HarmonyRpcProvider.prototype.prepareRequest = function (method, params) {
+	        switch (method) {
+	            case "getBlockNumber":
+	                return ["eth_blockNumber", []];
+	            case "getGasPrice":
+	                return ["eth_gasPrice", []];
+	            case "getBalance":
+	                return ["eth_getBalance", [getLowerCase(params.address), params.blockTag]];
+	            case "getTransactionCount":
+	                return ["eth_getTransactionCount", [getLowerCase(params.address), params.blockTag]];
+	            case "getCode":
+	                return ["eth_getCode", [getLowerCase(params.address), params.blockTag]];
+	            case "getStorageAt":
+	                return ["eth_getStorageAt", [getLowerCase(params.address), params.position, params.blockTag]];
+	            case "sendTransaction":
+	                return ["eth_sendRawTransaction", [params.signedTransaction]];
+	            case "getBlock":
+	                if (params.blockTag) {
+	                    return ["eth_getBlockByNumber", [params.blockTag, !!params.includeTransactions]];
+	                }
+	                else if (params.blockHash) {
+	                    return ["eth_getBlockByHash", [params.blockHash, !!params.includeTransactions]];
+	                }
+	                return null;
+	            case "getTransaction":
+	                return ["eth_getTransactionByHash", [params.transactionHash]];
+	            case "getTransactionReceipt":
+	                return ["eth_getTransactionReceipt", [params.transactionHash]];
+	            case "call": {
+	                var hexlifyTransaction = lib$3.getStatic(this.constructor, "hexlifyTransaction");
+	                return ["eth_call", [hexlifyTransaction(params.transaction, { from: true }), params.blockTag]];
+	            }
+	            case "estimateGas": {
+	                var hexlifyTransaction = lib$3.getStatic(this.constructor, "hexlifyTransaction");
+	                return ["eth_estimateGas", [hexlifyTransaction(params.transaction, { from: true })]];
+	            }
+	            case "getLogs":
+	                if (params.filter && params.filter.address != null) {
+	                    params.filter.address = getLowerCase(params.filter.address);
+	                }
+	                return ["eth_getLogs", [params.filter]];
+	            default:
+	                break;
+	        }
+	        return null;
+	    };
+	    HarmonyRpcProvider.getUrl = function (network, apiKey) {
+	        if (network === void 0) { network = null; }
+	        if (apiKey === void 0) { apiKey = ''; }
+	        return {
+	            url: 'https://' + HARMONY_ENDPOINTS.testnet[0] + "/",
+	            throttleCallback: function (attempt, url) {
+	                if (!apiKey) {
+	                    formatter.showThrottleMessage();
+	                }
+	                return Promise.resolve(true);
+	            }
+	        };
+	    };
+	    return HarmonyRpcProvider;
+	}(jsonRpcProvider.JsonRpcProvider));
+	exports.HarmonyRpcProvider = HarmonyRpcProvider;
+
+	});
+
+	var harmonyProvider$1 = /*@__PURE__*/getDefaultExportFromCjs(harmonyProvider);
+
+	var harmony = createCommonjsModule(function (module, exports) {
+	"use strict";
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.HarmonyRpcProvider = void 0;
+
+	Object.defineProperty(exports, "HarmonyRpcProvider", { enumerable: true, get: function () { return harmonyProvider.HarmonyRpcProvider; } });
+
+	});
+
+	var index$r = /*@__PURE__*/getDefaultExportFromCjs(harmony);
+
 	var lib$r = createCommonjsModule(function (module, exports) {
 	"use strict";
 	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.Formatter = exports.showThrottleMessage = exports.isCommunityResourcable = exports.isCommunityResource = exports.getNetwork = exports.getDefaultProvider = exports.JsonRpcSigner = exports.IpcProvider = exports.WebSocketProvider = exports.Web3Provider = exports.StaticJsonRpcProvider = exports.PocketProvider = exports.NodesmithProvider = exports.JsonRpcProvider = exports.InfuraWebSocketProvider = exports.InfuraProvider = exports.EtherscanProvider = exports.CloudflareProvider = exports.AlchemyWebSocketProvider = exports.AlchemyProvider = exports.FallbackProvider = exports.UrlJsonRpcProvider = exports.Resolver = exports.BaseProvider = exports.Provider = void 0;
+	exports.Formatter = exports.showThrottleMessage = exports.isCommunityResourcable = exports.isCommunityResource = exports.getNetwork = exports.getDefaultProvider = exports.JsonRpcSigner = exports.HarmonyRpcProvider = exports.IpcProvider = exports.WebSocketProvider = exports.Web3Provider = exports.StaticJsonRpcProvider = exports.PocketProvider = exports.NodesmithProvider = exports.JsonRpcProvider = exports.InfuraWebSocketProvider = exports.InfuraProvider = exports.EtherscanProvider = exports.CloudflareProvider = exports.AlchemyWebSocketProvider = exports.AlchemyProvider = exports.FallbackProvider = exports.UrlJsonRpcProvider = exports.Resolver = exports.BaseProvider = exports.Provider = void 0;
 
 	Object.defineProperty(exports, "Provider", { enumerable: true, get: function () { return lib$b.Provider; } });
 
@@ -25556,6 +28271,8 @@
 	Object.defineProperty(exports, "Web3Provider", { enumerable: true, get: function () { return web3Provider.Web3Provider; } });
 
 	Object.defineProperty(exports, "WebSocketProvider", { enumerable: true, get: function () { return websocketProvider.WebSocketProvider; } });
+
+	Object.defineProperty(exports, "HarmonyRpcProvider", { enumerable: true, get: function () { return harmony.HarmonyRpcProvider; } });
 
 	Object.defineProperty(exports, "Formatter", { enumerable: true, get: function () { return formatter.Formatter; } });
 	Object.defineProperty(exports, "isCommunityResourcable", { enumerable: true, get: function () { return formatter.isCommunityResourcable; } });
@@ -25604,13 +28321,14 @@
 	        PocketProvider: pocketProvider.PocketProvider,
 	        Web3Provider: web3Provider.Web3Provider,
 	        IpcProvider: browserIpcProvider.IpcProvider,
+	        HarmonyRpcProvider: harmony.HarmonyRpcProvider,
 	    }, options);
 	}
 	exports.getDefaultProvider = getDefaultProvider;
 
 	});
 
-	var index$r = /*@__PURE__*/getDefaultExportFromCjs(lib$r);
+	var index$s = /*@__PURE__*/getDefaultExportFromCjs(lib$r);
 
 	var lib$s = createCommonjsModule(function (module, exports) {
 	"use strict";
@@ -25708,7 +28426,7 @@
 
 	});
 
-	var index$s = /*@__PURE__*/getDefaultExportFromCjs(lib$s);
+	var index$t = /*@__PURE__*/getDefaultExportFromCjs(lib$s);
 
 	var _version$K = createCommonjsModule(function (module, exports) {
 	"use strict";
@@ -25814,9 +28532,9 @@
 
 	});
 
-	var index$t = /*@__PURE__*/getDefaultExportFromCjs(lib$t);
+	var index$u = /*@__PURE__*/getDefaultExportFromCjs(lib$t);
 
-	var utils$3 = createCommonjsModule(function (module, exports) {
+	var utils$5 = createCommonjsModule(function (module, exports) {
 	"use strict";
 	var __createBinding = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
 	    if (k2 === undefined) k2 = k;
@@ -25962,7 +28680,7 @@
 
 	});
 
-	var utils$4 = /*@__PURE__*/getDefaultExportFromCjs(utils$3);
+	var utils$6 = /*@__PURE__*/getDefaultExportFromCjs(utils$5);
 
 	var _version$M = createCommonjsModule(function (module, exports) {
 	"use strict";
@@ -26018,7 +28736,7 @@
 
 	Object.defineProperty(exports, "Wordlist", { enumerable: true, get: function () { return lib$j.Wordlist; } });
 	Object.defineProperty(exports, "wordlists", { enumerable: true, get: function () { return lib$j.wordlists; } });
-	var utils = __importStar(utils$3);
+	var utils = __importStar(utils$5);
 	exports.utils = utils;
 
 	Object.defineProperty(exports, "errors", { enumerable: true, get: function () { return lib.ErrorCode; } });
@@ -26090,9 +28808,9 @@
 
 	});
 
-	var index$u = /*@__PURE__*/getDefaultExportFromCjs(lib$u);
+	var index$v = /*@__PURE__*/getDefaultExportFromCjs(lib$u);
 
-	return index$u;
+	return index$v;
 
 })));
 //# sourceMappingURL=ethers.umd.js.map
