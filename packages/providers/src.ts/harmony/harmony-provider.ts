@@ -404,7 +404,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             request: deepCopy(request),
             provider: this
         });
-        console.log('this.connetion', this.connection)
+  
         return fetchJson(this.connection, JSON.stringify(request), getResult).then((result) => {
             this.emit("debug", {
                 action: "response",
@@ -722,28 +722,13 @@ export class HarmonyRpcProvider extends BaseProvider {
 
     async getLastCrossLinks(): Promise<CrossLink[]> {
         const params = {};
-        const result = await this.perform("getLastCrossLinks",params);
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getLastCrossLinks",
-                params, result, error
-            });
-        }
+        return this.perform("getLastCrossLinks",params);
+
     }
 
     async getLeader(): Promise<string> {
         const params = {};
-        const result = await this.perform("getLeader",params);
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getLeader",
-                params, result, error
-            });
-        }
+        return this.perform("getLeader",params);
     }
 
     async getGasPrice(): Promise<BigNumber> {
@@ -761,15 +746,7 @@ export class HarmonyRpcProvider extends BaseProvider {
 
     async getShardingStructure(): Promise<ShardingStructure[]> {
         const params = {};
-        const result = await this.perform("getShardingStructure",params);
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getShardingStructure",
-                params, result, error
-            });
-        }
+        return this.perform("getShardingStructure",params);
     }
 
     async getTotalSupply(): Promise<BigNumber> {
@@ -789,57 +766,25 @@ export class HarmonyRpcProvider extends BaseProvider {
         const params = await resolveProperties({
             epochNumber: epochNumber,
         });
-        const result = await this.perform("getValidators",params);
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getValidators",
-                params, result, error
-            });
-        }
+        return this.perform("getValidators",params);
     }
 
     async getValidatorKeys(epochNumber: number): Promise<string[]> {
         const params = await resolveProperties({
             epochNumber: epochNumber,
         });
-        const result = await this.perform("getValidatorKeys",params);
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getValidatorKeys",
-                params, result, error
-            });
-        }
+        return this.perform("getValidatorKeys",params);
     }
 
     //Node
     async getCurrentBadBlocks(): Promise<string[]> {
         const params = {};
-        const result = await this.perform("getCurrentBadBlocks",params);
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getCurrentBadBlocks",
-                params, result, error
-            });
-        }
+        return this.perform("getCurrentBadBlocks",params);
     }
 
     async getNodeMetadata(): Promise<NodeMetadata> {
         const params = {};
-        const result = await this.perform("getNodeMetadata",params);
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getNodeMetadata",
-                params, result, error
-            });
-        }
+        return this.perform("getNodeMetadata",params);
     }
 
     async getProtocolVersion(): Promise<number> {
@@ -857,15 +802,7 @@ export class HarmonyRpcProvider extends BaseProvider {
 
     async getPeerCount(): Promise<string> {
         const params = {};
-        const result = await this.perform("getPeerCount",params);
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getPeerCount",
-                params, result, error
-            });
-        }
+        return this.perform("getPeerCount",params);
     }
 
     //Blocks
@@ -877,15 +814,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             extra: extra,
         });
 
-        const result = await this.perform("getBlocks", params);
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getBlocks",
-                params, result, error
-            });
-        }
+        return this.perform("getBlocks", params);
     }
 
     async getBlockByNumber(blockNumber: number, extra: {withSingers: boolean;fullTx: boolean; inclStaking: boolean;}): Promise<Block> {
@@ -895,15 +824,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             extra: extra,
         });
 
-        const result = await this.perform("getBlockByNumber", params);
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getBlockByNumber",
-                params, result, error
-            });
-        }
+        return this.perform("getBlockByNumber", params);
     }
 
     async getBlockByHash(blockHash: string, extra: {withSingers: boolean;fullTx: boolean; inclStaking: boolean;}): Promise<Block> {
@@ -913,15 +834,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             extra: extra,
         });
 
-        const result = await this.perform("getBlockByHash", params);
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getBlockByHash",
-                params, result, error
-            });
-        }
+        return this.perform("getBlockByHash", params);
     }
 
 
@@ -933,15 +846,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             extra: extra,
         });
 
-        const result = await this.perform("getBlockSigners", params);
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getBlockSigners",
-                params, result, error
-            });
-        }
+        return this.perform("getBlockSigners", params);
     }
 
     async getBlockSignersKeys(blockNumber: number): Promise<string[]> {
@@ -950,15 +855,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             blockNumber: blockNumber,
         });
 
-        const result = await this.perform("getBlockSignersKeys", params);
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getBlockSignersKeys",
-                params, result, error
-            });
-        }
+        return this.perform("getBlockSignersKeys", params);
     }
 
     async getBlockTransactionCountByNumber(blockNumber: number): Promise<number> {
@@ -967,9 +864,9 @@ export class HarmonyRpcProvider extends BaseProvider {
             blockNumber: blockNumber,
         });
 
-        const result = await this.perform("getBlockTransactionCountByNumber", params);
+        const result = this.perform("getBlockTransactionCountByNumber", params);
         try {
-            return result;
+            return BigNumber.from(result).toNumber();
         } catch (error) {
             return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
                 method: "getBlockTransactionCountByNumber",
@@ -986,7 +883,7 @@ export class HarmonyRpcProvider extends BaseProvider {
 
         const result = await this.perform("getBlockTransactionCountByHash", params);
         try {
-            return result;
+            return BigNumber.from(result).toNumber();
         } catch (error) {
             return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
                 method: "getBlockTransactionCountByHash",
@@ -1001,30 +898,14 @@ export class HarmonyRpcProvider extends BaseProvider {
             blockNumber: blockNumber,
         });
 
-        const result = await this.perform("getHeaderByNumber", params);
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getHeaderByNumber",
-                params, result, error
-            });
-        }
+        return this.perform("getHeaderByNumber", params);
     }
 
     async getLatestChainHeaders(blockNumber: number): Promise<ChainHeader> {
         await this.getNetwork();
         const params = {};
 
-        const result = await this.perform("getLatestChainHeaders", params);
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getLatestChainHeaders",
-                params, result, error
-            });
-        }
+        return this.perform("getLatestChainHeaders", params);
     }
 
     async getLatestHeader(blockNumber: number): Promise<BlockHeader> {
@@ -1119,16 +1000,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             order: order,
         });
 
-        const result = await this.perform("getStakingTransactionsHistory", params);
-
-        try {
-            return result.staking_transactions;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getStakingTransactionsHistory",
-                params, result, error
-            });
-        }
+        return this.perform("getStakingTransactionsHistory", params);
     }
 
     async getTransactionsCount(addressOrName: string | Promise<string>, transactionType?: TransactionType): Promise<number> {
@@ -1167,16 +1039,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             order: order,
         });
 
-        const result = await this.perform("getTransactionsHistory", params);
-
-        try {
-            return result.staking_transactions;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getTransactionsHistory",
-                params, result, error
-            });
-        }
+        return this.perform("getTransactionsHistory", params);
     }
 
     ///////////// END /////////
@@ -1188,15 +1051,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             delegator: this._getAddress(delegator),
         });
 
-        const result = await this.perform("getDelegationsByDelegator", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getDelegationsByDelegator",
-                params, result, error
-            });
-        }
+        return this.perform("getDelegationsByDelegator", params); 
     }
 
     async getDelegationsByDelegatorByBlockNumber(delegator: string | Promise<string>, blockNumber: number): Promise<Delegation[]> {
@@ -1206,15 +1061,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             blockNumber: blockNumber
         });
 
-        const result = await this.perform("getDelegationsByDelegatorByBlockNumber", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getDelegationsByDelegatorByBlockNumber",
-                params, result, error
-            });
-        }
+        return this.perform("getDelegationsByDelegatorByBlockNumber", params);
     }
 
     async getDelegationsByValidator(validator: string | Promise<string>): Promise<Delegation[]> {
@@ -1223,15 +1070,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             validator: this._getAddress(validator),
         });
 
-        const result = await this.perform("getDelegationsByValidator", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getDelegationsByValidator",
-                params, result, error
-            });
-        }
+        return this.perform("getDelegationsByValidator", params); 
     }
 
     // async getDelegationsByValidatorByBlockNumber(validator: string | Promise<string>, blockNumber: number): Promise<Delegation[]> {
@@ -1257,15 +1096,7 @@ export class HarmonyRpcProvider extends BaseProvider {
         await this.getNetwork();
         const params = {};
 
-        const result = await this.perform("getAllValidatorAddresses", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getAllValidatorAddresses",
-                params, result, error
-            });
-        }
+        return this.perform("getAllValidatorAddresses", params); 
     }
 
     async getAllValidatorInformation(pageIndex: number): Promise<ValidatorInformation[]> {
@@ -1274,15 +1105,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             pageIndex: pageIndex
         };
 
-        const result = await this.perform("getAllValidatorInformation", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getAllValidatorInformation",
-                params, result, error
-            });
-        }
+        return this.perform("getAllValidatorInformation", params); 
     }
 
     async getAllValidatorInformationByBlockNumber(pageIndex: number, blockNumber: number): Promise<ValidatorInformation[]> {
@@ -1292,30 +1115,14 @@ export class HarmonyRpcProvider extends BaseProvider {
             blockNumber: blockNumber,
         };
 
-        const result = await this.perform("getAllValidatorInformationByBlockNumber", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getAllValidatorInformationByBlockNumber",
-                params, result, error
-            });
-        }
+        return this.perform("getAllValidatorInformationByBlockNumber", params); 
     }
 
     async getElectedValidatorAddresses(): Promise<string[]> {
         await this.getNetwork();
         const params = {};
 
-        const result = await this.perform("getElectedValidatorAddresses", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getElectedValidatorAddresses",
-                params, result, error
-            });
-        }
+        return this.perform("getElectedValidatorAddresses", params); 
     }
 
     async getValidatorInformation(validator: string): Promise<ValidatorInformation> {
@@ -1324,15 +1131,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             validator: this._getAddress(validator),
         });
 
-        const result = await this.perform("getValidatorInformation", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getValidatorInformation",
-                params, result, error
-            });
-        }
+        return this.perform("getValidatorInformation", params); 
     }
 
     //Network
@@ -1340,60 +1139,28 @@ export class HarmonyRpcProvider extends BaseProvider {
         await this.getNetwork();
         const params = {};
 
-        const result = await this.perform("getCurrentUtilityMetrics", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getCurrentUtilityMetrics",
-                params, result, error
-            });
-        }
+        return this.perform("getCurrentUtilityMetrics", params); 
     }
 
     async getMedianRawStakeSnapshot(): Promise<RawStaleSnapshot> {
         await this.getNetwork();
         const params = {};
 
-        const result = await this.perform("getMedianRawStakeSnapshot", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getMedianRawStakeSnapshot",
-                params, result, error
-            });
-        }
+        return this.perform("getMedianRawStakeSnapshot", params); 
     }
 
     async getStakingNetworkInfo(): Promise<StakingNetworkInfo> {
         await this.getNetwork();
         const params = {};
 
-        const result = await this.perform("getStakingNetworkInfo", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getStakingNetworkInfo",
-                params, result, error
-            });
-        }
+        return this.perform("getStakingNetworkInfo", params); 
     }
 
     async getSuperCommittees(): Promise<SuperCommittee> {
         await this.getNetwork();
         const params = {};
 
-        const result = await this.perform("getSuperCommittees", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getSuperCommittees",
-                params, result, error
-            });
-        }
+        return this.perform("getSuperCommittees", params); 
     }
 
     //Transaction
@@ -1404,30 +1171,14 @@ export class HarmonyRpcProvider extends BaseProvider {
             cxHash: cxHash,
         });
 
-        const result = await this.perform("getCXReceiptByHash", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getCXReceiptByHash",
-                params, result, error
-            });
-        }
+        return this.perform("getCXReceiptByHash", params); 
     }
 
     async getPendingCXReceipts(): Promise<PendingCXReceipt[]> {
         await this.getNetwork();
         const params = {};
 
-        const result = await this.perform("getPendingCXReceipts", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getPendingCXReceipts",
-                params, result, error
-            });
-        }
+        return this.perform("getPendingCXReceipts", params); 
     }
 
     async resendCx(cxReceiptHash: string): Promise<boolean> {
@@ -1436,15 +1187,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             cxReceiptHash: cxReceiptHash
         };
 
-        const result = await this.perform("resendCx", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "resendCx",
-                params, result, error
-            });
-        }
+        return this.perform("resendCx", params); 
     }
 
     //Transaction Pool
@@ -1452,45 +1195,21 @@ export class HarmonyRpcProvider extends BaseProvider {
         await this.getNetwork();
         const params = {};
 
-        const result = await this.perform("getPoolStats", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getPoolStats",
-                params, result, error
-            });
-        }
+        return this.perform("getPoolStats", params); 
     }
 
     async getPendingStakingTransaction(): Promise<StakingTransaction[]> {
         await this.getNetwork();
         const params = {};
 
-        const result = await this.perform("getPendingStakingTransaction", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getPendingStakingTransaction",
-                params, result, error
-            });
-        }
+        return this.perform("getPendingStakingTransaction", params); 
     }
 
     async getPendingTransactions(): Promise<Transaction[]> {
         await this.getNetwork();
         const params = {};
 
-        const result = await this.perform("getPendingTransactions", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getPendingTransactions",
-                params, result, error
-            });
-        }
+        return this.perform("getPendingTransactions", params); 
     }
 
     //Staking
@@ -1498,15 +1217,7 @@ export class HarmonyRpcProvider extends BaseProvider {
         await this.getNetwork();
         const params = {};
 
-        const result = await this.perform("getCurrentStakingErrorSink", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getCurrentStakingErrorSink",
-                params, result, error
-            });
-        }
+        return this.perform("getCurrentStakingErrorSink", params); 
     }
 
     async getStakingTransactionByBlockNumberAndIndex(blockNumber: number, stakingTransactionIndex: number): Promise<StakingTransaction> {
@@ -1516,15 +1227,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             stakingTransactionIndex: stakingTransactionIndex,
         };
 
-        const result = await this.perform("getStakingTransactionByBlockNumberAndIndex", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getStakingTransactionByBlockNumberAndIndex",
-                params, result, error
-            });
-        }
+        return this.perform("getStakingTransactionByBlockNumberAndIndex", params);
     }
 
     async getStakingTransactionByBlockHashAndIndex(blockHash: string, stakingTransactionIndex: number): Promise<StakingTransaction> {
@@ -1534,15 +1237,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             stakingTransactionIndex: stakingTransactionIndex,
         };
 
-        const result = await this.perform("getStakingTransactionByBlockHashAndIndex", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getStakingTransactionByBlockHashAndIndex",
-                params, result, error
-            });
-        }
+        return this.perform("getStakingTransactionByBlockHashAndIndex", params); 
     }
 
     async getStakingTransactionByHash(blockHash: string): Promise<StakingTransaction> {
@@ -1551,15 +1246,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             blockHash: blockHash,
         };
 
-        const result = await this.perform("getStakingTransactionByHash", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getStakingTransactionByHash",
-                params, result, error
-            });
-        }
+        return this.perform("getStakingTransactionByHash", params); 
     }
 
     async sendRawStakingTransaction(signedTransaction: string | Promise<string>): Promise<TransactionResponse> {
@@ -1581,15 +1268,7 @@ export class HarmonyRpcProvider extends BaseProvider {
         await this.getNetwork();
         const params = {};
 
-        const result = await this.perform("getCurrentTransactionErrorSink", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getCurrentTransactionErrorSink",
-                params, result, error
-            });
-        }
+        return this.perform("getCurrentTransactionErrorSink", params); 
     }
 
     async getTransactionByBlockNumberAndIndex(blockNumber: number, transactionIndex: number): Promise<Transaction> {
@@ -1599,15 +1278,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             transactionIndex: transactionIndex,
         };
 
-        const result = await this.perform("getTransactionByBlockNumberAndIndex", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getTransactionByBlockNumberAndIndex",
-                params, result, error
-            });
-        }
+        return this.perform("getTransactionByBlockNumberAndIndex", params); 
     }
 
     async getTransactionByBlockHashAndIndex(blockHash: string, transactionIndex: number): Promise<Transaction> {
@@ -1617,15 +1288,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             transactionIndex: transactionIndex,
         };
 
-        const result = await this.perform("getTransactionByBlockHashAndIndex", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getTransactionByBlockHashAndIndex",
-                params, result, error
-            });
-        }
+        return this.perform("getTransactionByBlockHashAndIndex", params); 
     }
 
     async getTransactionByHash(blockHash: string): Promise<Transaction> {
@@ -1634,15 +1297,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             blockHash: blockHash,
         };
 
-        const result = await this.perform("getTransactionByHash", params); 
-        try {
-            return result;
-        } catch (error) {
-            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
-                method: "getTransactionByHash",
-                params, result, error
-            });
-        }
+        return this.perform("getTransactionByHash", params); 
     }
 
     async getTransactionReceipt(transactionHash: string | Promise<string>): Promise<TransactionReceipt> {
