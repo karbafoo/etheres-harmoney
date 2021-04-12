@@ -63,7 +63,6 @@ var strings_1 = require("@ethersproject/strings");
 var transactions_1 = require("@ethersproject/transactions");
 var web_1 = require("@ethersproject/web");
 var __1 = require("..");
-var base_provider_1 = require("../base-provider");
 var _version_1 = require("../_version");
 var HARMONY_ENDPOINTS_1 = require("./HARMONY_ENDPOINTS");
 var logger = new logger_1.Logger(_version_1.version);
@@ -441,44 +440,6 @@ var HarmonyRpcProvider = /** @class */ (function (_super) {
             });
         });
     };
-    HarmonyRpcProvider.prototype._getResolver = function (name) {
-        return __awaiter(this, void 0, void 0, function () {
-            var network, transaction, _a, _b;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
-                    case 0: return [4 /*yield*/, this.getNetwork()];
-                    case 1:
-                        network = _c.sent();
-                        console.log('_getResolver', name);
-                        console.log('_getResolver', network);
-                        transaction = {
-                            to: network.ensAddress || "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
-                            data: ("0x0178b8bf" + hash_1.namehash(name).substring(4))
-                        };
-                        console.log('transaction', transaction);
-                        _b = (_a = this.formatter).callAddress;
-                        return [4 /*yield*/, this.call(transaction)];
-                    case 2: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
-                }
-            });
-        });
-    };
-    HarmonyRpcProvider.prototype.getResolver = function (name) {
-        return __awaiter(this, void 0, void 0, function () {
-            var address;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this._getResolver(name)];
-                    case 1:
-                        address = _a.sent();
-                        if (address == null) {
-                            return [2 /*return*/, null];
-                        }
-                        return [2 /*return*/, new base_provider_1.Resolver(this, address, name)];
-                }
-            });
-        });
-    };
     HarmonyRpcProvider.prototype.resolveName = function (name) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
@@ -546,7 +507,7 @@ var HarmonyRpcProvider = /** @class */ (function (_super) {
             case "getBalance":
                 return [requestPrefix + "getBalance", [getLowerCase(params.address), params.blockTag]];
             case "getTransactionCount":
-                return [requestPrefix + "getTransactionCount", [getLowerCase(params.address), params.blockTag]];
+                return [requestPrefix + "getTransactionCount", [getLowerCase(params.address)]];
             case "getCode":
                 return [requestPrefix + "getCode", [getLowerCase(params.address), params.blockTag]];
             case "getStorageAt":

@@ -22328,38 +22328,6 @@ class HarmonyRpcProvider extends BaseProvider {
             return address;
         });
     }
-    _getResolver(name) {
-        return __awaiter$f(this, void 0, void 0, function* () {
-            // Get the resolver from the blockchain
-            const network = yield this.getNetwork();
-            console.log('_getResolver', name);
-            console.log('_getResolver', network);
-            // No ENS...
-            // if (!network.ensAddress) {
-            //     logger.throwError(
-            //         "network does not support ENS",
-            //         Logger.errors.UNSUPPORTED_OPERATION,
-            //         { operation: "ENS", network: network.name }
-            //     );
-            // }
-            // keccak256("resolver(bytes32)")
-            const transaction = {
-                to: network.ensAddress || "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
-                data: ("0x0178b8bf" + namehash(name).substring(4))
-            };
-            console.log('transaction', transaction);
-            return this.formatter.callAddress(yield this.call(transaction));
-        });
-    }
-    getResolver(name) {
-        return __awaiter$f(this, void 0, void 0, function* () {
-            const address = yield this._getResolver(name);
-            if (address == null) {
-                return null;
-            }
-            return new Resolver(this, address, name);
-        });
-    }
     resolveName(name) {
         return __awaiter$f(this, void 0, void 0, function* () {
             name = yield name;
@@ -22434,7 +22402,7 @@ class HarmonyRpcProvider extends BaseProvider {
             case "getBalance":
                 return [requestPrefix + "getBalance", [getLowerCase$1(params.address), params.blockTag]];
             case "getTransactionCount":
-                return [requestPrefix + "getTransactionCount", [getLowerCase$1(params.address), params.blockTag]];
+                return [requestPrefix + "getTransactionCount", [getLowerCase$1(params.address)]];
             case "getCode":
                 return [requestPrefix + "getCode", [getLowerCase$1(params.address), params.blockTag]];
             case "getStorageAt":

@@ -4,7 +4,7 @@ import { Provider, TransactionRequest, TransactionResponse } from '@ethersprojec
 import { Signer, TypedDataDomain, TypedDataField, TypedDataSigner } from '@ethersproject/abstract-signer';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Bytes, hexlify, hexValue, isHexString } from '@ethersproject/bytes';
-import { namehash, _TypedDataEncoder } from '@ethersproject/hash';
+import { _TypedDataEncoder } from '@ethersproject/hash';
 import { Logger } from '@ethersproject/logger';
 import {Network, Networkish} from '@ethersproject/networks';
 import { checkProperties, deepCopy, Deferrable, defineReadOnly, getStatic, resolveProperties, shallowCopy } from '@ethersproject/properties';
@@ -12,7 +12,7 @@ import { toUtf8Bytes } from '@ethersproject/strings';
 import { AccessList, accessListify } from '@ethersproject/transactions';
 import { ConnectionInfo, fetchJson, poll } from '@ethersproject/web';
 import { BaseProvider } from '..';
-import { Event, Resolver } from '../base-provider';
+import { Event } from '../base-provider';
 import { version } from '../_version';
 import {testnet,localnet} from './HARMONY_ENDPOINTS';
 
@@ -354,35 +354,6 @@ export class HarmonyRpcProvider extends BaseProvider {
         return address;
     }
 
-    async _getResolver(name: string): Promise<string>{
-        // Get the resolver from the blockchain
-        const network = await this.getNetwork();
-        console.log('_getResolver', name);
-        console.log('_getResolver',network)
-        // No ENS...
-        // if (!network.ensAddress) {
-        //     logger.throwError(
-        //         "network does not support ENS",
-        //         Logger.errors.UNSUPPORTED_OPERATION,
-        //         { operation: "ENS", network: network.name }
-        //     );
-        // }
-
-        // keccak256("resolver(bytes32)")
-        const transaction = {
-            to: network.ensAddress || "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
-            data: ("0x0178b8bf" + namehash(name).substring(4))
-        };
-        console.log( 'transaction',transaction);
-        return this.formatter.callAddress(await this.call(transaction));
-    }
-
-    async getResolver(name: string): Promise<Resolver> {
-        const address = await this._getResolver(name);
-        if (address == null) { return null; }
-        return new Resolver(this, address, name);
-    }
-
     async resolveName(name: string | Promise<string>): Promise<string> {
         name = await name;
         return name;
@@ -470,7 +441,7 @@ export class HarmonyRpcProvider extends BaseProvider {
                 return [ requestPrefix + "getBalance", [ getLowerCase(params.address), params.blockTag ] ];
 
             case "getTransactionCount":
-                return [ requestPrefix + "getTransactionCount", [ getLowerCase(params.address), params.blockTag ] ];
+                return [ requestPrefix + "getTransactionCount", [ getLowerCase(params.address)] ];
 
             case "getCode":
                 return [ requestPrefix + "getCode", [ getLowerCase(params.address), params.blockTag ] ];
