@@ -35,7 +35,7 @@ export class HarmonyRpcProvider extends JsonRpcProvider {
             defineReadOnly(this, "connection", Object.freeze(shallowCopy(url)));
         }
 
-        this._nextId = 42;
+        // this._nextId = 42;
     }
 
     static defaultUrl(): string {
