@@ -145,7 +145,7 @@ export class HarmonyRpcSigner extends Signer implements TypedDataSigner {
             return Promise.resolve(this._address);
         }
 
-        return this.provider.send(requestPrefix+"ccounts", []).then((accounts) => {
+        return this.provider.send(requestPrefix + "accounts", []).then((accounts) => {
             if (accounts.length <= this._index) {
                 logger.throwError("unknown account #" + this._index, Logger.errors.UNSUPPORTED_OPERATION, {
                     operation: "getAddress"
