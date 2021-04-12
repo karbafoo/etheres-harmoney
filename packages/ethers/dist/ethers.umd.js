@@ -28529,10 +28529,7 @@
 	                    case 0: return [4 /*yield*/, this.getNetwork()];
 	                    case 1:
 	                        network = _c.sent();
-	                        // No ENS...
-	                        if (!network.ensAddress) {
-	                            logger.throwError("network does not support ENS", lib.Logger.errors.UNSUPPORTED_OPERATION, { operation: "ENS", network: network.name });
-	                        }
+	                        console.log('_getResolver', network);
 	                        transaction = {
 	                            to: network.ensAddress,
 	                            data: ("0x0178b8bf" + lib$9.namehash(name).substring(2))

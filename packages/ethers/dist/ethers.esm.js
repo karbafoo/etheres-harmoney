@@ -22321,10 +22321,15 @@ class HarmonyRpcProvider extends BaseProvider {
         return __awaiter$f(this, void 0, void 0, function* () {
             // Get the resolver from the blockchain
             const network = yield this.getNetwork();
+            console.log('_getResolver', network);
             // No ENS...
-            if (!network.ensAddress) {
-                logger$F.throwError("network does not support ENS", Logger.errors.UNSUPPORTED_OPERATION, { operation: "ENS", network: network.name });
-            }
+            // if (!network.ensAddress) {
+            //     logger.throwError(
+            //         "network does not support ENS",
+            //         Logger.errors.UNSUPPORTED_OPERATION,
+            //         { operation: "ENS", network: network.name }
+            //     );
+            // }
             // keccak256("resolver(bytes32)")
             const transaction = {
                 to: network.ensAddress,
