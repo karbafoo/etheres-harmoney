@@ -28431,7 +28431,6 @@
 	    __extends(HarmonyRpcProvider, _super);
 	    function HarmonyRpcProvider(url, network) {
 	        var _newTarget = this.constructor;
-	        if (url === void 0) { url = HARMONY_ENDPOINTS.testnet[0]; }
 	        var _this = this;
 	        logger.checkNew(_newTarget, HarmonyRpcProvider);
 	        var networkOrReady = network;
@@ -28448,6 +28447,7 @@
 	            });
 	        }
 	        _this = _super.call(this, networkOrReady) || this;
+	        url = url ? url : _this.getURL(HARMONY_ENDPOINTS.testnet[0]);
 	        // Default URL
 	        if (!url) {
 	            url = lib$3.getStatic(_this.constructor, "defaultUrl")();
@@ -28460,10 +28460,12 @@
 	        else {
 	            lib$3.defineReadOnly(_this, "connection", Object.freeze(lib$3.shallowCopy(url)));
 	        }
-	        console.log('this.connetion cosntructor', _this.connection);
 	        _this._nextId = 42;
 	        return _this;
 	    }
+	    HarmonyRpcProvider.prototype.getURL = function (u) {
+	        return 'https://' + u + '/';
+	    };
 	    HarmonyRpcProvider.defaultUrl = function () {
 	        return HARMONY_ENDPOINTS.localnet[0];
 	    };

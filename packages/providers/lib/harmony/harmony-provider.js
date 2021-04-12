@@ -332,7 +332,6 @@ var HarmonyRpcProvider = /** @class */ (function (_super) {
     __extends(HarmonyRpcProvider, _super);
     function HarmonyRpcProvider(url, network) {
         var _newTarget = this.constructor;
-        if (url === void 0) { url = HARMONY_ENDPOINTS_1.testnet[0]; }
         var _this = this;
         logger.checkNew(_newTarget, HarmonyRpcProvider);
         var networkOrReady = network;
@@ -349,6 +348,7 @@ var HarmonyRpcProvider = /** @class */ (function (_super) {
             });
         }
         _this = _super.call(this, networkOrReady) || this;
+        url = url ? url : _this.getURL(HARMONY_ENDPOINTS_1.testnet[0]);
         // Default URL
         if (!url) {
             url = properties_1.getStatic(_this.constructor, "defaultUrl")();
@@ -361,10 +361,12 @@ var HarmonyRpcProvider = /** @class */ (function (_super) {
         else {
             properties_1.defineReadOnly(_this, "connection", Object.freeze(properties_1.shallowCopy(url)));
         }
-        console.log('this.connetion cosntructor', _this.connection);
         _this._nextId = 42;
         return _this;
     }
+    HarmonyRpcProvider.prototype.getURL = function (u) {
+        return 'https://' + u + '/';
+    };
     HarmonyRpcProvider.defaultUrl = function () {
         return HARMONY_ENDPOINTS_1.localnet[0];
     };

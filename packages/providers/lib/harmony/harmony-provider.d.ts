@@ -30,6 +30,7 @@ export declare class HarmonyRpcProvider extends BaseProvider {
     _pendingFilter: Promise<number>;
     _nextId: number;
     constructor(url?: ConnectionInfo | string, network?: Networkish);
+    getURL(u: string): string;
     static defaultUrl(): string;
     detectNetwork(): Promise<Network>;
     getSigner(addressOrIndex?: string | number): HarmonyRpcSigner;

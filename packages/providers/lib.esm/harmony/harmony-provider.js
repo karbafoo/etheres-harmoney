@@ -240,7 +240,7 @@ const allowedTransactionKeys = {
     type: true, accessList: true
 };
 export class HarmonyRpcProvider extends BaseProvider {
-    constructor(url = testnet[0], network) {
+    constructor(url, network) {
         logger.checkNew(new.target, HarmonyRpcProvider);
         let networkOrReady = network;
         // The network is unknown, query the JSON-RPC for it
@@ -256,6 +256,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             });
         }
         super(networkOrReady);
+        url = url ? url : this.getURL(testnet[0]);
         // Default URL
         if (!url) {
             url = getStatic(this.constructor, "defaultUrl")();
@@ -268,8 +269,10 @@ export class HarmonyRpcProvider extends BaseProvider {
         else {
             defineReadOnly(this, "connection", Object.freeze(shallowCopy(url)));
         }
-        console.log('this.connetion cosntructor', this.connection);
         this._nextId = 42;
+    }
+    getURL(u) {
+        return 'https://' + u + '/';
     }
     static defaultUrl() {
         return localnet[0];

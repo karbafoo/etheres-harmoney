@@ -271,7 +271,7 @@ export class HarmonyRpcProvider extends BaseProvider {
     _pendingFilter: Promise<number>;
     _nextId: number;
 
-    constructor(url: ConnectionInfo | string = testnet[0], network?: Networkish) {
+    constructor(url?: ConnectionInfo | string, network?: Networkish) {
         logger.checkNew(new.target, HarmonyRpcProvider);
 
         let networkOrReady: Networkish | Promise<Network> = network;
@@ -291,6 +291,7 @@ export class HarmonyRpcProvider extends BaseProvider {
 
         super(networkOrReady);
 
+        url = url ? url : this.getURL(testnet[0]);
         // Default URL
         if (!url) { url = getStatic<() => string>(this.constructor, "defaultUrl")(); }
 
@@ -301,10 +302,13 @@ export class HarmonyRpcProvider extends BaseProvider {
         } else {
             defineReadOnly(this, "connection", Object.freeze(shallowCopy(url)));
         }
-        console.log('this.connetion cosntructor' , this.connection)
+
         this._nextId = 42;
     }
 
+    getURL(u: string): string{
+        return 'https://' + u + '/';
+    }
     static defaultUrl(): string {
         return localnet[0];
     }
