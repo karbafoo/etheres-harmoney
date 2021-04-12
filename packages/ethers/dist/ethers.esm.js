@@ -22556,9 +22556,9 @@ class HarmonyRpcProvider extends BaseProvider {
                 blockTag: this._getBlockTag(blockTag)
             });
             const result = yield this.perform("getBalance", params);
-            console.log('getbalance', result.toString());
+            console.log('getbalance', result);
             try {
-                return BigNumber.from(result.toString());
+                return BigNumber.from(result);
             }
             catch (error) {
                 return logger$F.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {

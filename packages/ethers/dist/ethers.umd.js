@@ -28778,9 +28778,9 @@
 	                        return [4 /*yield*/, this.perform("getBalance", params)];
 	                    case 3:
 	                        result = _a.sent();
-	                        console.log('getbalance', result.toString());
+	                        console.log('getbalance', result);
 	                        try {
-	                            return [2 /*return*/, lib$2.BigNumber.from(result.toString())];
+	                            return [2 /*return*/, lib$2.BigNumber.from(result)];
 	                        }
 	                        catch (error) {
 	                            return [2 /*return*/, logger.throwError("bad result from backend", lib.Logger.errors.SERVER_ERROR, {
