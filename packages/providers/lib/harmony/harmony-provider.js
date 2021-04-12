@@ -481,34 +481,12 @@ var HarmonyRpcProvider = /** @class */ (function (_super) {
     };
     HarmonyRpcProvider.prototype.resolveName = function (name) {
         return __awaiter(this, void 0, void 0, function () {
-            var resolver;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, name];
                     case 1:
                         name = _a.sent();
-                        // If it is already an address, nothing to resolve
-                        try {
-                            return [2 /*return*/, Promise.resolve(this.formatter.address(name))];
-                        }
-                        catch (error) {
-                            // If is is a hexstring, the address is bad (See #694)
-                            if (bytes_1.isHexString(name)) {
-                                throw error;
-                            }
-                        }
-                        if (typeof (name) !== "string") {
-                            logger.throwArgumentError("invalid ENS name", "name", name);
-                        }
-                        console.log('resolveName', name);
-                        return [4 /*yield*/, this.getResolver(name)];
-                    case 2:
-                        resolver = _a.sent();
-                        if (!resolver) {
-                            return [2 /*return*/, null];
-                        }
-                        return [4 /*yield*/, resolver.getAddress()];
-                    case 3: return [2 /*return*/, _a.sent()];
+                        return [2 /*return*/, name];
                 }
             });
         });

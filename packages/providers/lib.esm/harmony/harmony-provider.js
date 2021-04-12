@@ -358,26 +358,22 @@ export class HarmonyRpcProvider extends BaseProvider {
     resolveName(name) {
         return __awaiter(this, void 0, void 0, function* () {
             name = yield name;
-            // If it is already an address, nothing to resolve
-            try {
-                return Promise.resolve(this.formatter.address(name));
-            }
-            catch (error) {
-                // If is is a hexstring, the address is bad (See #694)
-                if (isHexString(name)) {
-                    throw error;
-                }
-            }
-            if (typeof (name) !== "string") {
-                logger.throwArgumentError("invalid ENS name", "name", name);
-            }
-            console.log('resolveName', name);
-            // Get the addr from the resovler
-            const resolver = yield this.getResolver(name);
-            if (!resolver) {
-                return null;
-            }
-            return yield resolver.getAddress();
+            return name;
+            // // If it is already an address, nothing to resolve
+            // try {
+            //     return Promise.resolve(this.formatter.address(name));
+            // } catch (error) {
+            //     // If is is a hexstring, the address is bad (See #694)
+            //     if (isHexString(name)) { throw error; }
+            // }
+            // if (typeof(name) !== "string") {
+            //     logger.throwArgumentError("invalid ENS name", "name", name);
+            // }
+            // console.log('resolveName', name);
+            // // Get the addr from the resovler
+            // const resolver = await this.getResolver(name);
+            // if (!resolver) { return null; }
+            // return await resolver.getAddress();
         });
     }
     getSigner(addressOrIndex) {

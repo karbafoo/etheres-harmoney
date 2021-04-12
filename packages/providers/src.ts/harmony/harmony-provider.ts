@@ -385,24 +385,24 @@ export class HarmonyRpcProvider extends BaseProvider {
 
     async resolveName(name: string | Promise<string>): Promise<string> {
         name = await name;
+        return name;
+        // // If it is already an address, nothing to resolve
+        // try {
+        //     return Promise.resolve(this.formatter.address(name));
+        // } catch (error) {
+        //     // If is is a hexstring, the address is bad (See #694)
+        //     if (isHexString(name)) { throw error; }
+        // }
 
-        // If it is already an address, nothing to resolve
-        try {
-            return Promise.resolve(this.formatter.address(name));
-        } catch (error) {
-            // If is is a hexstring, the address is bad (See #694)
-            if (isHexString(name)) { throw error; }
-        }
+        // if (typeof(name) !== "string") {
+        //     logger.throwArgumentError("invalid ENS name", "name", name);
+        // }
+        // console.log('resolveName', name);
+        // // Get the addr from the resovler
+        // const resolver = await this.getResolver(name);
+        // if (!resolver) { return null; }
 
-        if (typeof(name) !== "string") {
-            logger.throwArgumentError("invalid ENS name", "name", name);
-        }
-        console.log('resolveName', name);
-        // Get the addr from the resovler
-        const resolver = await this.getResolver(name);
-        if (!resolver) { return null; }
-
-        return await resolver.getAddress();
+        // return await resolver.getAddress();
     }
 
     getSigner(addressOrIndex?: string | number): HarmonyRpcSigner {
