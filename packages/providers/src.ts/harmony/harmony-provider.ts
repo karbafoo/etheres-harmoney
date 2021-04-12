@@ -44,56 +44,59 @@ export class HarmonyRpcProvider extends JsonRpcProvider {
 
     prepareRequest(method: string, params: any): [ string, Array<any> ] {
         switch (method) {
-            case "getBlockNumber":
+            case "getBlockNumberOld":
                 return [ "eth_blockNumber", [] ];
+            case "getBlockNumber":
+                return [ "hmyv2_blockNumber", [] ];
+     
 
             case "getGasPrice":
-                return [ "eth_gasPrice", [] ];
+                return [ "hmyv2_gasPrice", [] ];
 
             case "getBalance":
-                return [ "eth_getBalance", [ getLowerCase(params.address), params.blockTag ] ];
+                return [ "hmyv2_getBalance", [ getLowerCase(params.address), params.blockTag ] ];
 
             case "getTransactionCount":
-                return [ "eth_getTransactionCount", [ getLowerCase(params.address), params.blockTag ] ];
+                return [ "hmyv2_getTransactionCount", [ getLowerCase(params.address), params.blockTag ] ];
 
             case "getCode":
-                return [ "eth_getCode", [ getLowerCase(params.address), params.blockTag ] ];
+                return [ "hmyv2_getCode", [ getLowerCase(params.address), params.blockTag ] ];
 
             case "getStorageAt":
-                return [ "eth_getStorageAt", [ getLowerCase(params.address), params.position, params.blockTag ] ];
+                return [ "hmyv2_getStorageAt", [ getLowerCase(params.address), params.position, params.blockTag ] ];
 
             case "sendTransaction":
-                return [ "eth_sendRawTransaction", [ params.signedTransaction ] ]
+                return [ "hmyv2_sendRawTransaction", [ params.signedTransaction ] ]
 
             case "getBlock":
                 if (params.blockTag) {
-                    return [ "eth_getBlockByNumber", [ params.blockTag, !!params.includeTransactions ] ];
+                    return [ "hmyv2_getBlockByNumber", [ params.blockTag, !!params.includeTransactions ] ];
                 } else if (params.blockHash) {
-                    return [ "eth_getBlockByHash", [ params.blockHash, !!params.includeTransactions ] ];
+                    return [ "hmyv2_getBlockByHash", [ params.blockHash, !!params.includeTransactions ] ];
                 }
                 return null;
 
             case "getTransaction":
-                return [ "eth_getTransactionByHash", [ params.transactionHash ] ];
+                return [ "hmyv2_getTransactionByHash", [ params.transactionHash ] ];
 
             case "getTransactionReceipt":
-                return [ "eth_getTransactionReceipt", [ params.transactionHash ] ];
+                return [ "hmyv2_getTransactionReceipt", [ params.transactionHash ] ];
 
             case "call": {
                 const hexlifyTransaction = getStatic<(t: TransactionRequest, a?: { [key: string]: boolean }) => { [key: string]: string }>(this.constructor, "hexlifyTransaction");
-                return [ "eth_call", [ hexlifyTransaction(params.transaction, { from: true }), params.blockTag ] ];
+                return [ "hmyv2_call", [ hexlifyTransaction(params.transaction, { from: true }), params.blockTag ] ];
             }
 
             case "estimateGas": {
                 const hexlifyTransaction = getStatic<(t: TransactionRequest, a?: { [key: string]: boolean }) => { [key: string]: string }>(this.constructor, "hexlifyTransaction");
-                return [ "eth_estimateGas", [ hexlifyTransaction(params.transaction, { from: true }) ] ];
+                return [ "hmyv2_estimateGas", [ hexlifyTransaction(params.transaction, { from: true }) ] ];
             }
 
             case "getLogs":
                 if (params.filter && params.filter.address != null) {
                     params.filter.address = getLowerCase(params.filter.address);
                 }
-                return [ "eth_getLogs", [ params.filter ] ];
+                return [ "hmyv2_getLogs", [ params.filter ] ];
 
             default:
                 break;
