@@ -505,9 +505,9 @@ var HarmonyRpcProvider = /** @class */ (function (_super) {
             case "getGasPrice":
                 return [requestPrefix + "gasPrice", []];
             case "getBalance":
-                return [requestPrefix + "getBalance", [getLowerCase(params.address), params.blockTag]];
+                return [requestPrefix + "getBalance", [getLowerCase(params.address)]];
             case "getTransactionCount":
-                return [requestPrefix + "getTransactionCount", [getLowerCase(params.address)]];
+                return [requestPrefix + "getTransactionCount", [getLowerCase(params.address), params.blockTag]];
             case "getCode":
                 return [requestPrefix + "getCode", [getLowerCase(params.address), params.blockTag]];
             case "getStorageAt":

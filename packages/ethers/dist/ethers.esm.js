@@ -22400,9 +22400,9 @@ class HarmonyRpcProvider extends BaseProvider {
             case "getGasPrice":
                 return [requestPrefix + "gasPrice", []];
             case "getBalance":
-                return [requestPrefix + "getBalance", [getLowerCase$1(params.address), params.blockTag]];
+                return [requestPrefix + "getBalance", [getLowerCase$1(params.address)]];
             case "getTransactionCount":
-                return [requestPrefix + "getTransactionCount", [getLowerCase$1(params.address)]];
+                return [requestPrefix + "getTransactionCount", [getLowerCase$1(params.address), params.blockTag]];
             case "getCode":
                 return [requestPrefix + "getCode", [getLowerCase$1(params.address), params.blockTag]];
             case "getStorageAt":
