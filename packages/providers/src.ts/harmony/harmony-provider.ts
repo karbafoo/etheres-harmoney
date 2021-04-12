@@ -301,7 +301,7 @@ export class HarmonyRpcProvider extends BaseProvider {
         } else {
             defineReadOnly(this, "connection", Object.freeze(shallowCopy(url)));
         }
-
+        console.log('this.connetion cosntructor' , this.connection)
         this._nextId = 42;
     }
 
@@ -366,7 +366,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             request: deepCopy(request),
             provider: this
         });
-
+        console.log('this.connetion', this.connection)
         return fetchJson(this.connection, JSON.stringify(request), getResult).then((result) => {
             this.emit("debug", {
                 action: "response",

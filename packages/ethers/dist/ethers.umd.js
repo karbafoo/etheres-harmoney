@@ -28460,6 +28460,7 @@
 	        else {
 	            lib$3.defineReadOnly(_this, "connection", Object.freeze(lib$3.shallowCopy(url)));
 	        }
+	        console.log('this.connetion cosntructor', _this.connection);
 	        _this._nextId = 42;
 	        return _this;
 	    }
@@ -28541,6 +28542,7 @@
 	            request: lib$3.deepCopy(request),
 	            provider: this
 	        });
+	        console.log('this.connetion', this.connection);
 	        return lib$q.fetchJson(this.connection, JSON.stringify(request), getResult).then(function (result) {
 	            _this.emit("debug", {
 	                action: "response",

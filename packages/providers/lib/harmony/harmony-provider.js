@@ -361,6 +361,7 @@ var HarmonyRpcProvider = /** @class */ (function (_super) {
         else {
             properties_1.defineReadOnly(_this, "connection", Object.freeze(properties_1.shallowCopy(url)));
         }
+        console.log('this.connetion cosntructor', _this.connection);
         _this._nextId = 42;
         return _this;
     }
@@ -442,6 +443,7 @@ var HarmonyRpcProvider = /** @class */ (function (_super) {
             request: properties_1.deepCopy(request),
             provider: this
         });
+        console.log('this.connetion', this.connection);
         return web_1.fetchJson(this.connection, JSON.stringify(request), getResult).then(function (result) {
             _this.emit("debug", {
                 action: "response",
