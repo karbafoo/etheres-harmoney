@@ -184,10 +184,10 @@ export class HarmonyRpcSigner extends Signer implements TypedDataSigner {
 
             const hexTx = (<any>this.provider.constructor).hexlifyTransaction(tx, { from: true });
 
-            return this.provider.send(requestPrefix + "sendTransaction", [ hexTx ]).then((hash) => {
+            return this.provider.send(requestPrefix + "sendRawTransaction", [ hexTx ]).then((hash) => {
                 return hash;
             }, (error) => {
-                return checkError("sendTransaction", error, hexTx);
+                return checkError("sendRawTransaction", error, hexTx);
             });
         });
     }
@@ -450,7 +450,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             case "getStorageAt":
                 return [ requestPrefix + "getStorageAt", [ getLowerCase(params.address), params.position, params.blockTag ] ];
 
-            case "sendTransaction":
+            case "sendRawTransaction":
                 return [ requestPrefix + "sendRawTransaction", [ params.signedTransaction ] ]
 
             case "getBlock":
@@ -1683,12 +1683,12 @@ export class HarmonyRpcProvider extends BaseProvider {
         }, { oncePoll: this });
     }
 
-    async sendRawransaction(signedTransaction: string | Promise<string>): Promise<TransactionResponse> {
+    async sendRawTransaction(signedTransaction: string | Promise<string>): Promise<TransactionResponse> {
         await this.getNetwork();
         const hexTx = await Promise.resolve(signedTransaction).then(t => hexlify(t));
         const tx = this.formatter.transaction(signedTransaction);
         try {
-            const hash = await this.perform("sendRawransaction", { signedTransaction: hexTx });
+            const hash = await this.perform("sendRawTransaction", { signedTransaction: hexTx });
             return this._wrapTransaction(tx, hash);
         } catch (error) {
             (<any>error).transaction = tx;
