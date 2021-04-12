@@ -679,9 +679,9 @@ var HarmonyRpcProvider = /** @class */ (function (_super) {
                         return [4 /*yield*/, this.perform("getBalance", params)];
                     case 3:
                         result = _a.sent();
-                        console.log('getbalance', result);
+                        console.log('getbalance', result.toString());
                         try {
-                            return [2 /*return*/, bignumber_1.BigNumber.from(result)];
+                            return [2 /*return*/, bignumber_1.BigNumber.from(result.toString())];
                         }
                         catch (error) {
                             return [2 /*return*/, logger.throwError("bad result from backend", logger_1.Logger.errors.SERVER_ERROR, {

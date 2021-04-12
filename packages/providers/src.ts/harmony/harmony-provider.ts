@@ -610,9 +610,9 @@ export class HarmonyRpcProvider extends BaseProvider {
         });
 
         const result = await this.perform("getBalance", params);
-        console.log('getbalance',result);
+        console.log('getbalance',result.toString());
         try {
-            return BigNumber.from(result);
+            return BigNumber.from(result.toString());
         } catch (error) {
             return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
                 method: "getBalance",
