@@ -28780,7 +28780,7 @@
 	                        result = _a.sent();
 	                        console.log('getbalance', result);
 	                        try {
-	                            return [2 /*return*/, lib$2.BigNumber.from(result.toString())];
+	                            return [2 /*return*/, lib$2.BigNumber.from(result)];
 	                        }
 	                        catch (error) {
 	                            return [2 /*return*/, logger.throwError("bad result from backend", lib.Logger.errors.SERVER_ERROR, {

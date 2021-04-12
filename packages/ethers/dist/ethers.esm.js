@@ -22558,7 +22558,7 @@ class HarmonyRpcProvider extends BaseProvider {
             const result = yield this.perform("getBalance", params);
             console.log('getbalance', result);
             try {
-                return BigNumber.from(result.toString());
+                return BigNumber.from(result);
             }
             catch (error) {
                 return logger$F.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
