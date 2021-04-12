@@ -28552,7 +28552,7 @@
 	                        console.log('_getResolver', network);
 	                        transaction = {
 	                            to: network.ensAddress,
-	                            data: ("0x0178b8bf" + lib$9.namehash(name).substring(2))
+	                            data: ("0x0178b8bf" + lib$9.namehash(name).substring(4))
 	                        };
 	                        console.log('transaction', transaction);
 	                        _b = (_a = this.formatter).callAddress;
