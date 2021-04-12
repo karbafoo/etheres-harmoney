@@ -28761,6 +28761,38 @@
 	        }
 	        return result;
 	    };
+	    HarmonyRpcProvider.prototype.getBalance = function (addressOrName, blockTag) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params, result;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                address: this._getAddress(addressOrName),
+	                                blockTag: this._getBlockTag(blockTag)
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [4 /*yield*/, this.perform("getBalance", params)];
+	                    case 3:
+	                        result = _a.sent();
+	                        console.log('getbalance', result);
+	                        try {
+	                            return [2 /*return*/, lib$2.BigNumber.from(result.toString())];
+	                        }
+	                        catch (error) {
+	                            return [2 /*return*/, logger.throwError("bad result from backend", lib.Logger.errors.SERVER_ERROR, {
+	                                    method: "getBalance",
+	                                    params: params, result: result, error: error
+	                                })];
+	                        }
+	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
 	    return HarmonyRpcProvider;
 	}(lib$r.BaseProvider));
 	exports.HarmonyRpcProvider = HarmonyRpcProvider;

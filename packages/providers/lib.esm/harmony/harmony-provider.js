@@ -542,5 +542,25 @@ export class HarmonyRpcProvider extends BaseProvider {
         }
         return result;
     }
+    getBalance(addressOrName, blockTag) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                address: this._getAddress(addressOrName),
+                blockTag: this._getBlockTag(blockTag)
+            });
+            const result = yield this.perform("getBalance", params);
+            console.log('getbalance', result);
+            try {
+                return BigNumber.from(result.toString());
+            }
+            catch (error) {
+                return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                    method: "getBalance",
+                    params, result, error
+                });
+            }
+        });
+    }
 }
 //# sourceMappingURL=harmony-provider.js.map

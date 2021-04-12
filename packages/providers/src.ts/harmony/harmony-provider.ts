@@ -1,6 +1,6 @@
 "use strinct";
 
-import { Provider, TransactionRequest, TransactionResponse } from '@ethersproject/abstract-provider';
+import { BlockTag, Provider, TransactionRequest, TransactionResponse } from '@ethersproject/abstract-provider';
 import { Signer, TypedDataDomain, TypedDataField, TypedDataSigner } from '@ethersproject/abstract-signer';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Bytes, hexlify, hexValue, isHexString } from '@ethersproject/bytes';
@@ -601,15 +601,23 @@ export class HarmonyRpcProvider extends BaseProvider {
         return result;
     }
 
-    // static getUrl(network: Network = null, apiKey: string = ''): ConnectionInfo {
-    //     return {
-    //         url: 'https://' + testnet[0] + "/",
-    //         throttleCallback: (attempt: number, url:string) => {
-    //             if(!apiKey){
-    //                 showThrottleMessage();
-    //             }
-    //             return Promise.resolve(true);
-    //         }
-    //     }
-    // }
+
+    async getBalance(addressOrName: string | Promise<string>, blockTag?: BlockTag | Promise<BlockTag>): Promise<BigNumber> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            address: this._getAddress(addressOrName),
+            blockTag: this._getBlockTag(blockTag)
+        });
+
+        const result = await this.perform("getBalance", params);
+        console.log('getbalance',result);
+        try {
+            return BigNumber.from(result.toString());
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getBalance",
+                params, result, error
+            });
+        }
+    }
 }

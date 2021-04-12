@@ -1,5 +1,6 @@
-import { Provider, TransactionRequest, TransactionResponse } from '@ethersproject/abstract-provider';
+import { BlockTag, Provider, TransactionRequest, TransactionResponse } from '@ethersproject/abstract-provider';
 import { Signer, TypedDataDomain, TypedDataField, TypedDataSigner } from '@ethersproject/abstract-signer';
+import { BigNumber } from '@ethersproject/bignumber';
 import { Bytes } from '@ethersproject/bytes';
 import { Network, Networkish } from '@ethersproject/networks';
 import { Deferrable } from '@ethersproject/properties';
@@ -49,6 +50,7 @@ export declare class HarmonyRpcProvider extends BaseProvider {
     }): {
         [key: string]: string | AccessList;
     };
+    getBalance(addressOrName: string | Promise<string>, blockTag?: BlockTag | Promise<BlockTag>): Promise<BigNumber>;
 }
 export {};
 //# sourceMappingURL=harmony-provider.d.ts.map
