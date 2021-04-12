@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { Signer } from '@ethersproject/abstract-signer';
-import { BigNumber } from '@ethersproject/bignumber';
+// import { BigNumber } from '@ethersproject/bignumber';
 import { hexlify, hexValue, isHexString } from '@ethersproject/bytes';
 import { _TypedDataEncoder } from '@ethersproject/hash';
 import { Logger } from '@ethersproject/logger';
@@ -280,28 +280,18 @@ export class HarmonyRpcProvider extends BaseProvider {
     detectNetwork() {
         return __awaiter(this, void 0, void 0, function* () {
             yield timer(0);
-            let chainId = null;
             try {
-                chainId = yield this.send(requestPrefix + "chainId", []);
+                const HARMONEY_NETWORK = {
+                    name: 'harmoeny',
+                    chainId: 23232323
+                };
+                return HARMONEY_NETWORK;
             }
             catch (error) {
-                try {
-                    chainId = yield this.send("net_version", []);
-                }
-                catch (error) { }
-            }
-            if (chainId != null) {
-                const getNetwork = getStatic(this.constructor, "getNetwork");
-                try {
-                    return getNetwork(BigNumber.from(chainId).toNumber());
-                }
-                catch (error) {
-                    return logger.throwError("could not detect network", Logger.errors.NETWORK_ERROR, {
-                        chainId: chainId,
-                        event: "invalidNetwork",
-                        serverError: error
-                    });
-                }
+                return logger.throwError("could not detect network", Logger.errors.NETWORK_ERROR, {
+                    event: "invalidNetwork",
+                    serverError: error
+                });
             }
             return logger.throwError("could not detect network", Logger.errors.NETWORK_ERROR, {
                 event: "noNetwork"

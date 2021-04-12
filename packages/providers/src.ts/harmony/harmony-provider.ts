@@ -2,7 +2,7 @@
 
 import { Provider, TransactionRequest, TransactionResponse } from '@ethersproject/abstract-provider';
 import { Signer, TypedDataDomain, TypedDataField, TypedDataSigner } from '@ethersproject/abstract-signer';
-import { BigNumber } from '@ethersproject/bignumber';
+// import { BigNumber } from '@ethersproject/bignumber';
 import { Bytes, hexlify, hexValue, isHexString } from '@ethersproject/bytes';
 import { _TypedDataEncoder } from '@ethersproject/hash';
 import { Logger } from '@ethersproject/logger';
@@ -316,32 +316,25 @@ export class HarmonyRpcProvider extends BaseProvider {
     async detectNetwork(): Promise<Network> {
         await timer(0);
 
-        let chainId = null;
         try {
-            chainId = await this.send(requestPrefix + "chainId", [ ]);
-        } catch (error) {
-            try {
-                chainId = await this.send("net_version", [ ]);
-            } catch (error) { }
-        }
-
-        if (chainId != null) {
-            const getNetwork = getStatic<(network: Networkish) => Network>(this.constructor, "getNetwork");
-            try {
-                return getNetwork(BigNumber.from(chainId).toNumber());
-            } catch (error) {
-                return logger.throwError("could not detect network", Logger.errors.NETWORK_ERROR, {
-                    chainId: chainId,
-                    event: "invalidNetwork",
-                    serverError: error
-                });
+            const HARMONEY_NETWORK: Network = {
+                name: 'harmoeny',
+                chainId: 23232323
             }
+            return HARMONEY_NETWORK;
+        } catch (error) {
+            return logger.throwError("could not detect network", Logger.errors.NETWORK_ERROR, {
+                event: "invalidNetwork",
+                serverError: error
+            });
         }
 
         return logger.throwError("could not detect network", Logger.errors.NETWORK_ERROR, {
             event: "noNetwork"
         });
     }
+
+
 
     getSigner(addressOrIndex?: string | number): HarmonyRpcSigner {
         return new HarmonyRpcSigner(_constructorGuard, this, addressOrIndex);

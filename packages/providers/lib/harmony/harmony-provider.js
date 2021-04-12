@@ -54,7 +54,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HarmonyRpcProvider = exports.HarmonyRpcSigner = void 0;
 var abstract_signer_1 = require("@ethersproject/abstract-signer");
-var bignumber_1 = require("@ethersproject/bignumber");
+// import { BigNumber } from '@ethersproject/bignumber';
 var bytes_1 = require("@ethersproject/bytes");
 var hash_1 = require("@ethersproject/hash");
 var logger_1 = require("@ethersproject/logger");
@@ -372,46 +372,24 @@ var HarmonyRpcProvider = /** @class */ (function (_super) {
     };
     HarmonyRpcProvider.prototype.detectNetwork = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var chainId, error_1, error_2, getNetwork;
+            var HARMONEY_NETWORK;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, timer(0)];
                     case 1:
                         _a.sent();
-                        chainId = null;
-                        _a.label = 2;
-                    case 2:
-                        _a.trys.push([2, 4, , 9]);
-                        return [4 /*yield*/, this.send(requestPrefix + "chainId", [])];
-                    case 3:
-                        chainId = _a.sent();
-                        return [3 /*break*/, 9];
-                    case 4:
-                        error_1 = _a.sent();
-                        _a.label = 5;
-                    case 5:
-                        _a.trys.push([5, 7, , 8]);
-                        return [4 /*yield*/, this.send("net_version", [])];
-                    case 6:
-                        chainId = _a.sent();
-                        return [3 /*break*/, 8];
-                    case 7:
-                        error_2 = _a.sent();
-                        return [3 /*break*/, 8];
-                    case 8: return [3 /*break*/, 9];
-                    case 9:
-                        if (chainId != null) {
-                            getNetwork = properties_1.getStatic(this.constructor, "getNetwork");
-                            try {
-                                return [2 /*return*/, getNetwork(bignumber_1.BigNumber.from(chainId).toNumber())];
-                            }
-                            catch (error) {
-                                return [2 /*return*/, logger.throwError("could not detect network", logger_1.Logger.errors.NETWORK_ERROR, {
-                                        chainId: chainId,
-                                        event: "invalidNetwork",
-                                        serverError: error
-                                    })];
-                            }
+                        try {
+                            HARMONEY_NETWORK = {
+                                name: 'harmoeny',
+                                chainId: 23232323
+                            };
+                            return [2 /*return*/, HARMONEY_NETWORK];
+                        }
+                        catch (error) {
+                            return [2 /*return*/, logger.throwError("could not detect network", logger_1.Logger.errors.NETWORK_ERROR, {
+                                    event: "invalidNetwork",
+                                    serverError: error
+                                })];
                         }
                         return [2 /*return*/, logger.throwError("could not detect network", logger_1.Logger.errors.NETWORK_ERROR, {
                                 event: "noNetwork"
@@ -514,7 +492,7 @@ var HarmonyRpcProvider = /** @class */ (function (_super) {
     };
     HarmonyRpcProvider.prototype.perform = function (method, params) {
         return __awaiter(this, void 0, void 0, function () {
-            var args, error_3;
+            var args, error_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -528,8 +506,8 @@ var HarmonyRpcProvider = /** @class */ (function (_super) {
                         return [4 /*yield*/, this.send(args[0], args[1])];
                     case 2: return [2 /*return*/, _a.sent()];
                     case 3:
-                        error_3 = _a.sent();
-                        return [2 /*return*/, checkError(method, error_3, params)];
+                        error_1 = _a.sent();
+                        return [2 /*return*/, checkError(method, error_1, params)];
                     case 4: return [2 /*return*/];
                 }
             });
