@@ -14,7 +14,7 @@ import { ConnectionInfo, fetchJson, poll } from '@ethersproject/web';
 import { BaseProvider } from '..';
 import { Event } from '../base-provider';
 import { version } from '../_version';
-import {testnet,localnet} from './HARMONY_ENDPOINTS';
+import {testnet,localnet} from './harmony-rcp-api';
 
 const logger = new Logger(version);
 
