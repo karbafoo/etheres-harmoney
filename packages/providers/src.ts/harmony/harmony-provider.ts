@@ -609,7 +609,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             blockTag: this._getBlockTag(blockTag)
         });
 
-        const result: string = await this.perform("getBalance", params);
+        const result = await this.perform("getBalance", params);
         console.log('getbalance',result);
         try {
             return BigNumber.from(result);
