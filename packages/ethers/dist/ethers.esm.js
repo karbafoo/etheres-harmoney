@@ -22286,18 +22286,31 @@ class HarmonyRpcProvider extends BaseProvider {
     detectNetwork() {
         return __awaiter$f(this, void 0, void 0, function* () {
             yield timer$1(0);
+            let chainId = null;
             try {
-                const HARMONEY_NETWORK = {
-                    name: 'harmoeny',
-                    chainId: 23232323
-                };
-                return HARMONEY_NETWORK;
+                chainId = yield this.send(requestPrefix + "chainId", []);
             }
             catch (error) {
-                return logger$F.throwError("could not detect network", Logger.errors.NETWORK_ERROR, {
-                    event: "invalidNetwork",
-                    serverError: error
-                });
+                try {
+                    chainId = yield this.send("net_version", []);
+                }
+                catch (error) {
+                    console.log('net_version error', error);
+                }
+            }
+            chainId = 1;
+            if (chainId != null) {
+                const getNetwork = getStatic(this.constructor, "getNetwork");
+                try {
+                    return getNetwork(BigNumber.from(chainId).toNumber());
+                }
+                catch (error) {
+                    return logger$F.throwError("could not detect network", Logger.errors.NETWORK_ERROR, {
+                        chainId: chainId,
+                        event: "invalidNetwork",
+                        serverError: error
+                    });
+                }
             }
             return logger$F.throwError("could not detect network", Logger.errors.NETWORK_ERROR, {
                 event: "noNetwork"

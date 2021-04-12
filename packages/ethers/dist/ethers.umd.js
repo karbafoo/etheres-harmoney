@@ -28153,7 +28153,7 @@
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.HarmonyRpcProvider = exports.HarmonyRpcSigner = void 0;
 
-	// import { BigNumber } from '@ethersproject/bignumber';
+
 
 
 
@@ -28471,24 +28471,48 @@
 	    };
 	    HarmonyRpcProvider.prototype.detectNetwork = function () {
 	        return __awaiter(this, void 0, void 0, function () {
-	            var HARMONEY_NETWORK;
+	            var chainId, error_1, error_2, getNetwork;
 	            return __generator(this, function (_a) {
 	                switch (_a.label) {
 	                    case 0: return [4 /*yield*/, timer(0)];
 	                    case 1:
 	                        _a.sent();
-	                        try {
-	                            HARMONEY_NETWORK = {
-	                                name: 'harmoeny',
-	                                chainId: 23232323
-	                            };
-	                            return [2 /*return*/, HARMONEY_NETWORK];
-	                        }
-	                        catch (error) {
-	                            return [2 /*return*/, logger.throwError("could not detect network", lib.Logger.errors.NETWORK_ERROR, {
-	                                    event: "invalidNetwork",
-	                                    serverError: error
-	                                })];
+	                        chainId = null;
+	                        _a.label = 2;
+	                    case 2:
+	                        _a.trys.push([2, 4, , 9]);
+	                        return [4 /*yield*/, this.send(requestPrefix + "chainId", [])];
+	                    case 3:
+	                        chainId = _a.sent();
+	                        return [3 /*break*/, 9];
+	                    case 4:
+	                        error_1 = _a.sent();
+	                        _a.label = 5;
+	                    case 5:
+	                        _a.trys.push([5, 7, , 8]);
+	                        return [4 /*yield*/, this.send("net_version", [])];
+	                    case 6:
+	                        chainId = _a.sent();
+	                        return [3 /*break*/, 8];
+	                    case 7:
+	                        error_2 = _a.sent();
+	                        console.log('net_version error', error_2);
+	                        return [3 /*break*/, 8];
+	                    case 8: return [3 /*break*/, 9];
+	                    case 9:
+	                        chainId = 1;
+	                        if (chainId != null) {
+	                            getNetwork = lib$3.getStatic(this.constructor, "getNetwork");
+	                            try {
+	                                return [2 /*return*/, getNetwork(lib$2.BigNumber.from(chainId).toNumber())];
+	                            }
+	                            catch (error) {
+	                                return [2 /*return*/, logger.throwError("could not detect network", lib.Logger.errors.NETWORK_ERROR, {
+	                                        chainId: chainId,
+	                                        event: "invalidNetwork",
+	                                        serverError: error
+	                                    })];
+	                            }
 	                        }
 	                        return [2 /*return*/, logger.throwError("could not detect network", lib.Logger.errors.NETWORK_ERROR, {
 	                                event: "noNetwork"
@@ -28591,7 +28615,7 @@
 	    };
 	    HarmonyRpcProvider.prototype.perform = function (method, params) {
 	        return __awaiter(this, void 0, void 0, function () {
-	            var args, error_1;
+	            var args, error_3;
 	            return __generator(this, function (_a) {
 	                switch (_a.label) {
 	                    case 0:
@@ -28605,8 +28629,8 @@
 	                        return [4 /*yield*/, this.send(args[0], args[1])];
 	                    case 2: return [2 /*return*/, _a.sent()];
 	                    case 3:
-	                        error_1 = _a.sent();
-	                        return [2 /*return*/, checkError(method, error_1, params)];
+	                        error_3 = _a.sent();
+	                        return [2 /*return*/, checkError(method, error_3, params)];
 	                    case 4: return [2 /*return*/];
 	                }
 	            });
