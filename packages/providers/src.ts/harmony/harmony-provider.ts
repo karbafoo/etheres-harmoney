@@ -609,10 +609,10 @@ export class HarmonyRpcProvider extends BaseProvider {
             blockTag: this._getBlockTag(blockTag)
         });
 
-        const result: string = await this.perform("getBalance", params);
-        console.log('getbalance',result);
+        const result = await this.perform("getBalance", params);
+        console.log('getbalance',BigInt(result));
         try {
-            return BigNumber.from(result);
+            return BigNumber.from(BigInt(result));
         } catch (error) {
             return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
                 method: "getBalance",
