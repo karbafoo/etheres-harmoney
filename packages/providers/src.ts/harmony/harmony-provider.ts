@@ -318,13 +318,13 @@ export class HarmonyRpcProvider extends BaseProvider {
 
         let chainId = null;
         try {
-            chainId = await this.send(requestPrefix + "chainId", [ ]);
+            chainId = await this.send("eth_chainId", [ ]);
         } catch (error) {
             try {
                 chainId = await this.send("net_version", [ ]);
             } catch (error) { console.log('net_version error', error)}
         }
-        chainId = 1;
+        console.log(chainId, 'chainId');
         if (chainId != null) {
 
             const getNetwork = getStatic<(network: Networkish) => Network>(this.constructor, "getNetwork");
