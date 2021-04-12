@@ -4,7 +4,7 @@ import { Provider, TransactionRequest, TransactionResponse } from '@ethersprojec
 import { Signer, TypedDataDomain, TypedDataField, TypedDataSigner } from '@ethersproject/abstract-signer';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Bytes, hexlify, hexValue, isHexString } from '@ethersproject/bytes';
-import { _TypedDataEncoder } from '@ethersproject/hash';
+import { namehash, _TypedDataEncoder } from '@ethersproject/hash';
 import { Logger } from '@ethersproject/logger';
 import {Network, Networkish} from '@ethersproject/networks';
 import { checkProperties, deepCopy, Deferrable, defineReadOnly, getStatic, resolveProperties, shallowCopy } from '@ethersproject/properties';
@@ -344,7 +344,27 @@ export class HarmonyRpcProvider extends BaseProvider {
         });
     }
 
+    async _getResolver(name: string): Promise<string>{
+        // Get the resolver from the blockchain
+        const network = await this.getNetwork();
 
+        // No ENS...
+        if (!network.ensAddress) {
+            logger.throwError(
+                "network does not support ENS",
+                Logger.errors.UNSUPPORTED_OPERATION,
+                { operation: "ENS", network: network.name }
+            );
+        }
+
+        // keccak256("resolver(bytes32)")
+        const transaction = {
+            to: network.ensAddress,
+            data: ("0x0178b8bf" + namehash(name).substring(2))
+        };
+        console.log(transaction, 'transaction');
+        return this.formatter.callAddress(await this.call(transaction));
+    }
 
     getSigner(addressOrIndex?: string | number): HarmonyRpcSigner {
         return new HarmonyRpcSigner(_constructorGuard, this, addressOrIndex);

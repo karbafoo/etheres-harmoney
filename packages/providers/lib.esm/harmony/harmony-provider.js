@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { Signer } from '@ethersproject/abstract-signer';
 import { BigNumber } from '@ethersproject/bignumber';
 import { hexlify, hexValue, isHexString } from '@ethersproject/bytes';
-import { _TypedDataEncoder } from '@ethersproject/hash';
+import { namehash, _TypedDataEncoder } from '@ethersproject/hash';
 import { Logger } from '@ethersproject/logger';
 import { checkProperties, deepCopy, defineReadOnly, getStatic, resolveProperties, shallowCopy } from '@ethersproject/properties';
 import { toUtf8Bytes } from '@ethersproject/strings';
@@ -282,7 +282,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             yield timer(0);
             let chainId = null;
             try {
-                chainId = yield this.send(requestPrefix + "chainId", []);
+                chainId = yield this.send("eth_chainId", []);
             }
             catch (error) {
                 try {
@@ -292,7 +292,7 @@ export class HarmonyRpcProvider extends BaseProvider {
                     console.log('net_version error', error);
                 }
             }
-            chainId = 1;
+            console.log(chainId, 'chainId');
             if (chainId != null) {
                 const getNetwork = getStatic(this.constructor, "getNetwork");
                 try {
@@ -309,6 +309,23 @@ export class HarmonyRpcProvider extends BaseProvider {
             return logger.throwError("could not detect network", Logger.errors.NETWORK_ERROR, {
                 event: "noNetwork"
             });
+        });
+    }
+    _getResolver(name) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // Get the resolver from the blockchain
+            const network = yield this.getNetwork();
+            // No ENS...
+            if (!network.ensAddress) {
+                logger.throwError("network does not support ENS", Logger.errors.UNSUPPORTED_OPERATION, { operation: "ENS", network: network.name });
+            }
+            // keccak256("resolver(bytes32)")
+            const transaction = {
+                to: network.ensAddress,
+                data: ("0x0178b8bf" + namehash(name).substring(2))
+            };
+            console.log(transaction, 'transaction');
+            return this.formatter.callAddress(yield this.call(transaction));
         });
     }
     getSigner(addressOrIndex) {

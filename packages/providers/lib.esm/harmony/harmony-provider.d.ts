@@ -33,6 +33,7 @@ export declare class HarmonyRpcProvider extends BaseProvider {
     getURL(u: string): string;
     static defaultUrl(): string;
     detectNetwork(): Promise<Network>;
+    _getResolver(name: string): Promise<string>;
     getSigner(addressOrIndex?: string | number): HarmonyRpcSigner;
     getUncheckedSigner(addressOrIndex?: string | number): UncheckedHarmonyRpcSigner;
     listAccounts(): Promise<Array<string>>;

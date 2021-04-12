@@ -22288,7 +22288,7 @@ class HarmonyRpcProvider extends BaseProvider {
             yield timer$1(0);
             let chainId = null;
             try {
-                chainId = yield this.send(requestPrefix + "chainId", []);
+                chainId = yield this.send("eth_chainId", []);
             }
             catch (error) {
                 try {
@@ -22298,7 +22298,7 @@ class HarmonyRpcProvider extends BaseProvider {
                     console.log('net_version error', error);
                 }
             }
-            chainId = 1;
+            console.log(chainId, 'chainId');
             if (chainId != null) {
                 const getNetwork = getStatic(this.constructor, "getNetwork");
                 try {
@@ -22315,6 +22315,23 @@ class HarmonyRpcProvider extends BaseProvider {
             return logger$F.throwError("could not detect network", Logger.errors.NETWORK_ERROR, {
                 event: "noNetwork"
             });
+        });
+    }
+    _getResolver(name) {
+        return __awaiter$f(this, void 0, void 0, function* () {
+            // Get the resolver from the blockchain
+            const network = yield this.getNetwork();
+            // No ENS...
+            if (!network.ensAddress) {
+                logger$F.throwError("network does not support ENS", Logger.errors.UNSUPPORTED_OPERATION, { operation: "ENS", network: network.name });
+            }
+            // keccak256("resolver(bytes32)")
+            const transaction = {
+                to: network.ensAddress,
+                data: ("0x0178b8bf" + namehash(name).substring(2))
+            };
+            console.log(transaction, 'transaction');
+            return this.formatter.callAddress(yield this.call(transaction));
         });
     }
     getSigner(addressOrIndex) {

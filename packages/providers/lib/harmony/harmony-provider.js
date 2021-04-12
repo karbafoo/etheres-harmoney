@@ -382,7 +382,7 @@ var HarmonyRpcProvider = /** @class */ (function (_super) {
                         _a.label = 2;
                     case 2:
                         _a.trys.push([2, 4, , 9]);
-                        return [4 /*yield*/, this.send(requestPrefix + "chainId", [])];
+                        return [4 /*yield*/, this.send("eth_chainId", [])];
                     case 3:
                         chainId = _a.sent();
                         return [3 /*break*/, 9];
@@ -401,7 +401,7 @@ var HarmonyRpcProvider = /** @class */ (function (_super) {
                         return [3 /*break*/, 8];
                     case 8: return [3 /*break*/, 9];
                     case 9:
-                        chainId = 1;
+                        console.log(chainId, 'chainId');
                         if (chainId != null) {
                             getNetwork = properties_1.getStatic(this.constructor, "getNetwork");
                             try {
@@ -418,6 +418,30 @@ var HarmonyRpcProvider = /** @class */ (function (_super) {
                         return [2 /*return*/, logger.throwError("could not detect network", logger_1.Logger.errors.NETWORK_ERROR, {
                                 event: "noNetwork"
                             })];
+                }
+            });
+        });
+    };
+    HarmonyRpcProvider.prototype._getResolver = function (name) {
+        return __awaiter(this, void 0, void 0, function () {
+            var network, transaction, _a, _b;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0: return [4 /*yield*/, this.getNetwork()];
+                    case 1:
+                        network = _c.sent();
+                        // No ENS...
+                        if (!network.ensAddress) {
+                            logger.throwError("network does not support ENS", logger_1.Logger.errors.UNSUPPORTED_OPERATION, { operation: "ENS", network: network.name });
+                        }
+                        transaction = {
+                            to: network.ensAddress,
+                            data: ("0x0178b8bf" + hash_1.namehash(name).substring(2))
+                        };
+                        console.log(transaction, 'transaction');
+                        _b = (_a = this.formatter).callAddress;
+                        return [4 /*yield*/, this.call(transaction)];
+                    case 2: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
                 }
             });
         });
