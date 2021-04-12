@@ -452,7 +452,7 @@ var HarmonyRpcProvider = /** @class */ (function (_super) {
                         console.log('_getResolver', name);
                         console.log('_getResolver', network);
                         transaction = {
-                            to: network.ensAddress,
+                            to: network.ensAddress || "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
                             data: ("0x0178b8bf" + hash_1.namehash(name).substring(4))
                         };
                         console.log('transaction', transaction);

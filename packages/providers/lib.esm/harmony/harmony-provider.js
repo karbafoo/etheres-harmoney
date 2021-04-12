@@ -339,7 +339,7 @@ export class HarmonyRpcProvider extends BaseProvider {
             // }
             // keccak256("resolver(bytes32)")
             const transaction = {
-                to: network.ensAddress,
+                to: network.ensAddress || "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
                 data: ("0x0178b8bf" + namehash(name).substring(4))
             };
             console.log('transaction', transaction);
