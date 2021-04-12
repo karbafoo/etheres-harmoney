@@ -28164,6 +28164,7 @@
 
 
 
+
 	var logger = new lib.Logger(_version$I.version);
 	var errorGas = ["call", "estimateGas"];
 	var requestPrefix = "hmyv2_";
@@ -28521,6 +28522,24 @@
 	            });
 	        });
 	    };
+	    HarmonyRpcProvider.prototype._getAddress = function (addressOrName) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var address;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.resolveName(addressOrName)];
+	                    case 1:
+	                        address = _a.sent();
+	                        if (address == null) {
+	                            logger.throwError("ENS name not configured", lib.Logger.errors.UNSUPPORTED_OPERATION, {
+	                                operation: "resolveName(" + JSON.stringify(addressOrName) + ")"
+	                            });
+	                        }
+	                        return [2 /*return*/, address];
+	                }
+	            });
+	        });
+	    };
 	    HarmonyRpcProvider.prototype._getResolver = function (name) {
 	        return __awaiter(this, void 0, void 0, function () {
 	            var network, transaction, _a, _b;
@@ -28529,15 +28548,66 @@
 	                    case 0: return [4 /*yield*/, this.getNetwork()];
 	                    case 1:
 	                        network = _c.sent();
+	                        console.log('_getResolver', name);
 	                        console.log('_getResolver', network);
 	                        transaction = {
 	                            to: network.ensAddress,
 	                            data: ("0x0178b8bf" + lib$9.namehash(name).substring(2))
 	                        };
-	                        console.log(transaction, 'transaction');
+	                        console.log('transaction', transaction);
 	                        _b = (_a = this.formatter).callAddress;
 	                        return [4 /*yield*/, this.call(transaction)];
 	                    case 2: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getResolver = function (name) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var address;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this._getResolver(name)];
+	                    case 1:
+	                        address = _a.sent();
+	                        if (address == null) {
+	                            return [2 /*return*/, null];
+	                        }
+	                        return [2 /*return*/, new baseProvider.Resolver(this, address, name)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.resolveName = function (name) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var resolver;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, name];
+	                    case 1:
+	                        name = _a.sent();
+	                        // If it is already an address, nothing to resolve
+	                        try {
+	                            return [2 /*return*/, Promise.resolve(this.formatter.address(name))];
+	                        }
+	                        catch (error) {
+	                            // If is is a hexstring, the address is bad (See #694)
+	                            if (lib$1.isHexString(name)) {
+	                                throw error;
+	                            }
+	                        }
+	                        if (typeof (name) !== "string") {
+	                            logger.throwArgumentError("invalid ENS name", "name", name);
+	                        }
+	                        console.log('resolveName', name);
+	                        return [4 /*yield*/, this.getResolver(name)];
+	                    case 2:
+	                        resolver = _a.sent();
+	                        if (!resolver) {
+	                            return [2 /*return*/, null];
+	                        }
+	                        return [4 /*yield*/, resolver.getAddress()];
+	                    case 3: return [2 /*return*/, _a.sent()];
 	                }
 	            });
 	        });

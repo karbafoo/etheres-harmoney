@@ -6,7 +6,7 @@ import { Deferrable } from '@ethersproject/properties';
 import { AccessList } from '@ethersproject/transactions';
 import { ConnectionInfo } from '@ethersproject/web';
 import { BaseProvider } from '..';
-import { Event } from '../base-provider';
+import { Event, Resolver } from '../base-provider';
 export declare class HarmonyRpcSigner extends Signer implements TypedDataSigner {
     readonly provider: HarmonyRpcProvider;
     _index: number;
@@ -33,7 +33,10 @@ export declare class HarmonyRpcProvider extends BaseProvider {
     getURL(u: string): string;
     static defaultUrl(): string;
     detectNetwork(): Promise<Network>;
+    _getAddress(addressOrName: string | Promise<string>): Promise<string>;
     _getResolver(name: string): Promise<string>;
+    getResolver(name: string): Promise<Resolver>;
+    resolveName(name: string | Promise<string>): Promise<string>;
     getSigner(addressOrIndex?: string | number): HarmonyRpcSigner;
     getUncheckedSigner(addressOrIndex?: string | number): UncheckedHarmonyRpcSigner;
     listAccounts(): Promise<Array<string>>;

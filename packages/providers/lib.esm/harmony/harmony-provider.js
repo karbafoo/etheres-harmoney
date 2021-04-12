@@ -18,6 +18,7 @@ import { toUtf8Bytes } from '@ethersproject/strings';
 import { accessListify } from '@ethersproject/transactions';
 import { fetchJson, poll } from '@ethersproject/web';
 import { BaseProvider } from '..';
+import { Resolver } from '../base-provider';
 import { version } from '../_version';
 import { testnet, localnet } from './HARMONY_ENDPOINTS';
 const logger = new Logger(version);
@@ -311,10 +312,22 @@ export class HarmonyRpcProvider extends BaseProvider {
             });
         });
     }
+    _getAddress(addressOrName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const address = yield this.resolveName(addressOrName);
+            if (address == null) {
+                logger.throwError("ENS name not configured", Logger.errors.UNSUPPORTED_OPERATION, {
+                    operation: `resolveName(${JSON.stringify(addressOrName)})`
+                });
+            }
+            return address;
+        });
+    }
     _getResolver(name) {
         return __awaiter(this, void 0, void 0, function* () {
             // Get the resolver from the blockchain
             const network = yield this.getNetwork();
+            console.log('_getResolver', name);
             console.log('_getResolver', network);
             // No ENS...
             // if (!network.ensAddress) {
@@ -329,8 +342,42 @@ export class HarmonyRpcProvider extends BaseProvider {
                 to: network.ensAddress,
                 data: ("0x0178b8bf" + namehash(name).substring(2))
             };
-            console.log(transaction, 'transaction');
+            console.log('transaction', transaction);
             return this.formatter.callAddress(yield this.call(transaction));
+        });
+    }
+    getResolver(name) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const address = yield this._getResolver(name);
+            if (address == null) {
+                return null;
+            }
+            return new Resolver(this, address, name);
+        });
+    }
+    resolveName(name) {
+        return __awaiter(this, void 0, void 0, function* () {
+            name = yield name;
+            // If it is already an address, nothing to resolve
+            try {
+                return Promise.resolve(this.formatter.address(name));
+            }
+            catch (error) {
+                // If is is a hexstring, the address is bad (See #694)
+                if (isHexString(name)) {
+                    throw error;
+                }
+            }
+            if (typeof (name) !== "string") {
+                logger.throwArgumentError("invalid ENS name", "name", name);
+            }
+            console.log('resolveName', name);
+            // Get the addr from the resovler
+            const resolver = yield this.getResolver(name);
+            if (!resolver) {
+                return null;
+            }
+            return yield resolver.getAddress();
         });
     }
     getSigner(addressOrIndex) {
