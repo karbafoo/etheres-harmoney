@@ -1,8 +1,8 @@
 "use strinct";
 
-import { BlockTag, Provider, TransactionRequest, TransactionResponse } from '@ethersproject/abstract-provider';
+import { Block, BlockTag, Provider, TransactionReceipt, TransactionRequest, TransactionResponse } from '@ethersproject/abstract-provider';
 import { Signer, TypedDataDomain, TypedDataField, TypedDataSigner } from '@ethersproject/abstract-signer';
-import { BigNumber } from '@ethersproject/bignumber';
+import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { Bytes, hexlify, hexValue, isHexString } from '@ethersproject/bytes';
 import { _TypedDataEncoder } from '@ethersproject/hash';
 import { Logger } from '@ethersproject/logger';
@@ -21,6 +21,7 @@ const logger = new Logger(version);
 
 const errorGas = [ "call", "estimateGas" ];
 const requestPrefix = "hmyv2_";
+
 function checkError(method: string, error: any, params: any): any {
     // Undo the "convenience" some nodes are attempting to prevent backwards
     // incompatibility; maybe for v6 consider forwarding reverts as errors
@@ -602,15 +603,456 @@ export class HarmonyRpcProvider extends BaseProvider {
     }
 
 
-    async getBalance(addressOrName: string | Promise<string>, blockTag?: BlockTag | Promise<BlockTag>): Promise<BigNumber> {
+
+
+    // Smart Contract
+
+    //ALERT HARMONY <TransactionRequest>
+    async call(transaction: Deferrable<TransactionRequest>, blockTag?: BlockTag | Promise<BlockTag>): Promise<string> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            transaction: this._getTransactionRequest(transaction),
+            blockTag: this._getBlockTag(blockTag)
+        });
+
+        const result = await this.perform("call", params);
+        try {
+            return hexlify(result);
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "call",
+                params, result, error
+            });
+        }
+    }
+
+    async estimateGas(transaction: Deferrable<TransactionRequest>): Promise<BigNumber> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            transaction: this._getTransactionRequest(transaction)
+        });
+
+        const result = await this.perform("estimateGas", params);
+        try {
+            return BigNumber.from(result);
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "estimateGas",
+                params, result, error
+            });
+        }
+    }
+
+    async getCode(addressOrName: string | Promise<string>, blockTag?: BlockTag | Promise<BlockTag>): Promise<string> {
         await this.getNetwork();
         const params = await resolveProperties({
             address: this._getAddress(addressOrName),
             blockTag: this._getBlockTag(blockTag)
         });
 
+        const result = await this.perform("getCode", params);
+        try {
+            return hexlify(result);
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getCode",
+                params, result, error
+            });
+        }
+    }
+
+    async getStorageAt(addressOrName: string | Promise<string>, position: BigNumberish | Promise<BigNumberish>, blockTag?: BlockTag | Promise<BlockTag>): Promise<string> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            address: this._getAddress(addressOrName),
+            position: Promise.resolve(position).then((p) => hexValue(p)),
+            blockTag: this._getBlockTag(blockTag)
+        });
+        const result = await this.perform("getStorageAt", params);
+        try {
+            return hexlify(result);
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getStorageAt",
+                params, result, error
+            });
+        }
+    }
+
+    // Blockchain
+    //Network
+    async getBlockNumber(): Promise<number> {
+        const params = {};
+        const result = await this.perform("getBlockNumber",params);
+        try {
+            return BigNumber.from(result).toNumber();
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getBlockNumber",
+                params, result, error
+            });
+        }
+    }
+
+    async getCirculatingSupply(): Promise<number> {
+        const params = {};
+        const result = await this.perform("getCirculatingSupply",params);
+        try {
+            return BigNumber.from(result).toNumber();
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getCirculatingSupply",
+                params, result, error
+            });
+        }
+    }
+
+    async getEpoch(): Promise<number> {
+        const params = {};
+        const result = await this.perform("getEpoch",params);
+        try {
+            return BigNumber.from(result).toNumber();
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getEpoch",
+                params, result, error
+            });
+        }
+    }
+
+    async getLastCrossLinks(): Promise<CrossLink[]> {
+        const params = {};
+        const result = await this.perform("getLastCrossLinks",params);
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getLastCrossLinks",
+                params, result, error
+            });
+        }
+    }
+
+    async getLeader(): Promise<string> {
+        const params = {};
+        const result = await this.perform("getLeader",params);
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getLeader",
+                params, result, error
+            });
+        }
+    }
+
+    async getGasPrice(): Promise<BigNumber> {
+        const params = {};
+        const result = await this.perform("getGasPrice",params);
+        try {
+            return BigNumber.from(result);
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getGasPrice",
+                params, result, error
+            });
+        }
+    }
+
+    async getShardingStructure(): Promise<ShardingStructure[]> {
+        const params = {};
+        const result = await this.perform("getShardingStructure",params);
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getShardingStructure",
+                params, result, error
+            });
+        }
+    }
+
+    async getTotalSupply(): Promise<BigNumber> {
+        const params = {};
+        const result = await this.perform("getTotalSupply",params);
+        try {
+            return BigNumber.from(result);
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getTotalSupply",
+                params, result, error
+            });
+        }
+    }
+
+    async getValidators(epochNumber: number): Promise<ValidatorsObject> {
+        const params = await resolveProperties({
+            epochNumber: epochNumber,
+        });
+        const result = await this.perform("getValidators",params);
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getValidators",
+                params, result, error
+            });
+        }
+    }
+
+    async getValidatorKeys(epochNumber: number): Promise<string[]> {
+        const params = await resolveProperties({
+            epochNumber: epochNumber,
+        });
+        const result = await this.perform("getValidatorKeys",params);
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getValidatorKeys",
+                params, result, error
+            });
+        }
+    }
+
+    //Node
+    async getCurrentBadBlocks(): Promise<string[]> {
+        const params = {};
+        const result = await this.perform("getCurrentBadBlocks",params);
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getCurrentBadBlocks",
+                params, result, error
+            });
+        }
+    }
+
+    async getNodeMetadata(): Promise<NodeMetadata> {
+        const params = {};
+        const result = await this.perform("getNodeMetadata",params);
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getNodeMetadata",
+                params, result, error
+            });
+        }
+    }
+
+    async getProtocolVersion(): Promise<number> {
+        const params = {};
+        const result = await this.perform("getProtocolVersion",params);
+        try {
+            return BigNumber.from(result).toNumber();
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getProtocolVersion",
+                params, result, error
+            });
+        }
+    }
+
+    async getPeerCount(): Promise<string> {
+        const params = {};
+        const result = await this.perform("getPeerCount",params);
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getPeerCount",
+                params, result, error
+            });
+        }
+    }
+
+    //Blocks
+    async getBlocks(startingBlock: number, endingBlock: number, extra: {withSingers: boolean;fullTx: boolean; inclStaking: boolean;}): Promise<Block[]> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            startingBlock: startingBlock,
+            endingBlock: endingBlock,
+            extra: extra,
+        });
+
+        const result = await this.perform("getBlocks", params);
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getBlocks",
+                params, result, error
+            });
+        }
+    }
+
+    async getBlockByNumber(blockNumber: number, extra: {withSingers: boolean;fullTx: boolean; inclStaking: boolean;}): Promise<Block> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            blockNumber: blockNumber,
+            extra: extra,
+        });
+
+        const result = await this.perform("getBlockByNumber", params);
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getBlockByNumber",
+                params, result, error
+            });
+        }
+    }
+
+    async getBlockByHash(blockHash: string, extra: {withSingers: boolean;fullTx: boolean; inclStaking: boolean;}): Promise<Block> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            blockHash: blockHash,
+            extra: extra,
+        });
+
+        const result = await this.perform("getBlockByHash", params);
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getBlockByHash",
+                params, result, error
+            });
+        }
+    }
+
+
+    async getBlockSigners(startingBlock: number, endingBlock: number, extra: {withSingers: boolean;fullTx: boolean; inclStaking: boolean;}): Promise<string[]> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            startingBlock: startingBlock,
+            endingBlock: endingBlock,
+            extra: extra,
+        });
+
+        const result = await this.perform("getBlockSigners", params);
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getBlockSigners",
+                params, result, error
+            });
+        }
+    }
+
+    async getBlockSignersKeys(blockNumber: number): Promise<string[]> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            blockNumber: blockNumber,
+        });
+
+        const result = await this.perform("getBlockSignersKeys", params);
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getBlockSignersKeys",
+                params, result, error
+            });
+        }
+    }
+
+    async getBlockTransactionCountByNumber(blockNumber: number): Promise<number> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            blockNumber: blockNumber,
+        });
+
+        const result = await this.perform("getBlockTransactionCountByNumber", params);
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getBlockTransactionCountByNumber",
+                params, result, error
+            });
+        }
+    }
+
+    async getBlockTransactionCountByHash(blockHash: string): Promise<number> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            blockHash: blockHash,
+        });
+
+        const result = await this.perform("getBlockTransactionCountByHash", params);
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getBlockTransactionCountByHash",
+                params, result, error
+            });
+        }
+    }
+
+    async getHeaderByNumber(blockNumber: number): Promise<BlockHeader> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            blockNumber: blockNumber,
+        });
+
+        const result = await this.perform("getHeaderByNumber", params);
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getHeaderByNumber",
+                params, result, error
+            });
+        }
+    }
+
+    async getLatestChainHeaders(blockNumber: number): Promise<ChainHeader> {
+        await this.getNetwork();
+        const params = {};
+
+        const result = await this.perform("getLatestChainHeaders", params);
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getLatestChainHeaders",
+                params, result, error
+            });
+        }
+    }
+
+    async getLatestHeader(blockNumber: number): Promise<BlockHeader> {
+        await this.getNetwork();
+        const params = {};
+
+        const result = await this.perform("getLatestHeader", params);
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getLatestHeader",
+                params, result, error
+            });
+        }
+    }
+
+
+    // Account
+
+    async getBalance(addressOrName: string | Promise<string>): Promise<BigNumber> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            address: this._getAddress(addressOrName)
+        });
+
         const result = await this.perform("getBalance", params);
-        console.log('getbalance',BigInt(result));
+
         try {
             return BigNumber.from(BigInt(result));
         } catch (error) {
@@ -618,6 +1060,640 @@ export class HarmonyRpcProvider extends BaseProvider {
                 method: "getBalance",
                 params, result, error
             });
+        }
+    }
+
+    async getBalanceByBlockNumber(addressOrName: string | Promise<string>, blockTag?: BlockTag | Promise<BlockTag>): Promise<BigNumber> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            address: this._getAddress(addressOrName),
+            blockTag: this._getBlockTag(blockTag)
+        });
+
+        const result = await this.perform("getBalanceByBlockNumber", params);
+
+        try {
+            return BigNumber.from(BigInt(result));
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getBalanceByBlockNumber",
+                params, result, error
+            });
+        }
+    }
+
+    async getStakingTransactionsCount(addressOrName: string | Promise<string>, transactionType?: TransactionType): Promise<number> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            address: this._getAddress(addressOrName),
+            transactionType: transactionType
+        });
+
+        const result = await this.perform("getStakingTransactionsCount", params);
+
+        try {
+            return BigNumber.from(BigInt(result)).toNumber();
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getStakingTransactionsCount",
+                params, result, error
+            });
+        }
+    }
+
+    async getStakingTransactionsHistory(
+        addressOrName: string | Promise<string>, 
+        pageIndex?: number,
+        pageSize?: number,
+        fullTx?: boolean,
+        txType?: TransactionType,
+        order?: OrderType,
+        ): Promise<StakingTransaction[] | string[]> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            address: this._getAddress(addressOrName),
+            pageIndex: pageIndex,
+            pageSize: pageSize,
+            fullTx: fullTx,
+            txType: txType,
+            order: order,
+        });
+
+        const result = await this.perform("getStakingTransactionsHistory", params);
+
+        try {
+            return result.staking_transactions;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getStakingTransactionsHistory",
+                params, result, error
+            });
+        }
+    }
+
+    async getTransactionsCount(addressOrName: string | Promise<string>, transactionType?: TransactionType): Promise<number> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            address: this._getAddress(addressOrName),
+            transactionType: transactionType
+        });
+
+        const result = await this.perform("getTransactionsCount", params); //ALERT HARMONY getTransactionsCount
+        try {
+            return BigNumber.from(BigInt(result)).toNumber();
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getTransactionsCount",
+                params, result, error
+            });
+        }
+    }
+
+    async getTransactionsHistory(
+        addressOrName: string | Promise<string>, 
+        pageIndex?: number,
+        pageSize?: number,
+        fullTx?: boolean,
+        txType?: TransactionType,
+        order?: OrderType,
+        ): Promise<Transaction[] | string[]> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            address: this._getAddress(addressOrName),
+            pageIndex: pageIndex,
+            pageSize: pageSize,
+            fullTx: fullTx,
+            txType: txType,
+            order: order,
+        });
+
+        const result = await this.perform("getTransactionsHistory", params);
+
+        try {
+            return result.staking_transactions;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getTransactionsHistory",
+                params, result, error
+            });
+        }
+    }
+
+    ///////////// END /////////
+    //Staking
+    //Delegation
+    async getDelegationsByDelegator(delegator: string | Promise<string>): Promise<Delegation[]> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            delegator: this._getAddress(delegator),
+        });
+
+        const result = await this.perform("getDelegationsByDelegator", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getDelegationsByDelegator",
+                params, result, error
+            });
+        }
+    }
+
+    async getDelegationsByDelegatorByBlockNumber(delegator: string | Promise<string>, blockNumber: number): Promise<Delegation[]> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            delegator: this._getAddress(delegator),
+            blockNumber: blockNumber
+        });
+
+        const result = await this.perform("getDelegationsByDelegatorByBlockNumber", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getDelegationsByDelegatorByBlockNumber",
+                params, result, error
+            });
+        }
+    }
+
+    async getDelegationsByValidator(validator: string | Promise<string>): Promise<Delegation[]> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            validator: this._getAddress(validator),
+        });
+
+        const result = await this.perform("getDelegationsByValidator", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getDelegationsByValidator",
+                params, result, error
+            });
+        }
+    }
+
+    // async getDelegationsByValidatorByBlockNumber(validator: string | Promise<string>, blockNumber: number): Promise<Delegation[]> {
+    //     await this.getNetwork();
+    //     const params = await resolveProperties({
+    //         validator: this._getAddress(validator),
+    //         blockNumber: blockNumber
+    //     });
+
+    //     const result = await this.perform("getDelegationsByValidatorByBlockNumber", params); 
+    //     try {
+    //         return result;
+    //     } catch (error) {
+    //         return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+    //             method: "getDelegationsByValidatorByBlockNumber",
+    //             params, result, error
+    //         });
+    //     }
+    // }
+
+    // Validator
+    async getAllValidatorAddresses(): Promise<string[]> {
+        await this.getNetwork();
+        const params = {};
+
+        const result = await this.perform("getAllValidatorAddresses", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getAllValidatorAddresses",
+                params, result, error
+            });
+        }
+    }
+
+    async getAllValidatorInformation(pageIndex: number): Promise<ValidatorInformation[]> {
+        await this.getNetwork();
+        const params = {
+            pageIndex: pageIndex
+        };
+
+        const result = await this.perform("getAllValidatorInformation", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getAllValidatorInformation",
+                params, result, error
+            });
+        }
+    }
+
+    async getAllValidatorInformationByBlockNumber(pageIndex: number, blockNumber: number): Promise<ValidatorInformation[]> {
+        await this.getNetwork();
+        const params = {
+            pageIndex: pageIndex,
+            blockNumber: blockNumber,
+        };
+
+        const result = await this.perform("getAllValidatorInformationByBlockNumber", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getAllValidatorInformationByBlockNumber",
+                params, result, error
+            });
+        }
+    }
+
+    async getElectedValidatorAddresses(): Promise<string[]> {
+        await this.getNetwork();
+        const params = {};
+
+        const result = await this.perform("getElectedValidatorAddresses", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getElectedValidatorAddresses",
+                params, result, error
+            });
+        }
+    }
+
+    async getValidatorInformation(validator: string): Promise<ValidatorInformation> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            validator: this._getAddress(validator),
+        });
+
+        const result = await this.perform("getValidatorInformation", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getValidatorInformation",
+                params, result, error
+            });
+        }
+    }
+
+    //Network
+    async getCurrentUtilityMetrics(): Promise<UtilityMetric> {
+        await this.getNetwork();
+        const params = {};
+
+        const result = await this.perform("getCurrentUtilityMetrics", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getCurrentUtilityMetrics",
+                params, result, error
+            });
+        }
+    }
+
+    async getMedianRawStakeSnapshot(): Promise<RawStaleSnapshot> {
+        await this.getNetwork();
+        const params = {};
+
+        const result = await this.perform("getMedianRawStakeSnapshot", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getMedianRawStakeSnapshot",
+                params, result, error
+            });
+        }
+    }
+
+    async getStakingNetworkInfo(): Promise<StakingNetworkInfo> {
+        await this.getNetwork();
+        const params = {};
+
+        const result = await this.perform("getStakingNetworkInfo", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getStakingNetworkInfo",
+                params, result, error
+            });
+        }
+    }
+
+    async getSuperCommittees(): Promise<SuperCommittee> {
+        await this.getNetwork();
+        const params = {};
+
+        const result = await this.perform("getSuperCommittees", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getSuperCommittees",
+                params, result, error
+            });
+        }
+    }
+
+    //Transaction
+    //Cross Shard
+    async getCXReceiptByHash(cxHash: string): Promise<CXReceipt> {
+        await this.getNetwork();
+        const params = await resolveProperties({
+            cxHash: cxHash,
+        });
+
+        const result = await this.perform("getCXReceiptByHash", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getCXReceiptByHash",
+                params, result, error
+            });
+        }
+    }
+
+    async getPendingCXReceipts(): Promise<PendingCXReceipt[]> {
+        await this.getNetwork();
+        const params = {};
+
+        const result = await this.perform("getPendingCXReceipts", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getPendingCXReceipts",
+                params, result, error
+            });
+        }
+    }
+
+    async resendCx(cxReceiptHash: string): Promise<boolean> {
+        await this.getNetwork();
+        const params = {
+            cxReceiptHash: cxReceiptHash
+        };
+
+        const result = await this.perform("resendCx", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "resendCx",
+                params, result, error
+            });
+        }
+    }
+
+    //Transaction Pool
+    async getPoolStats(): Promise<PoolStat> {
+        await this.getNetwork();
+        const params = {};
+
+        const result = await this.perform("getPoolStats", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getPoolStats",
+                params, result, error
+            });
+        }
+    }
+
+    async getPendingStakingTransaction(): Promise<StakingTransaction[]> {
+        await this.getNetwork();
+        const params = {};
+
+        const result = await this.perform("getPendingStakingTransaction", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getPendingStakingTransaction",
+                params, result, error
+            });
+        }
+    }
+
+    async getPendingTransactions(): Promise<Transaction[]> {
+        await this.getNetwork();
+        const params = {};
+
+        const result = await this.perform("getPendingTransactions", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getPendingTransactions",
+                params, result, error
+            });
+        }
+    }
+
+    //Staking
+    async getCurrentStakingErrorSink(): Promise<StakingError[]> {
+        await this.getNetwork();
+        const params = {};
+
+        const result = await this.perform("getCurrentStakingErrorSink", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getCurrentStakingErrorSink",
+                params, result, error
+            });
+        }
+    }
+
+    async getStakingTransactionByBlockNumberAndIndex(blockNumber: number, stakingTransactionIndex: number): Promise<StakingTransaction> {
+        await this.getNetwork();
+        const params = {
+            blockNumber: blockNumber,
+            stakingTransactionIndex: stakingTransactionIndex,
+        };
+
+        const result = await this.perform("getStakingTransactionByBlockNumberAndIndex", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getStakingTransactionByBlockNumberAndIndex",
+                params, result, error
+            });
+        }
+    }
+
+    async getStakingTransactionByBlockHashAndIndex(blockHash: string, stakingTransactionIndex: number): Promise<StakingTransaction> {
+        await this.getNetwork();
+        const params = {
+            blockHash: blockHash,
+            stakingTransactionIndex: stakingTransactionIndex,
+        };
+
+        const result = await this.perform("getStakingTransactionByBlockHashAndIndex", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getStakingTransactionByBlockHashAndIndex",
+                params, result, error
+            });
+        }
+    }
+
+    async getStakingTransactionByHash(blockHash: string): Promise<StakingTransaction> {
+        await this.getNetwork();
+        const params = {
+            blockHash: blockHash,
+        };
+
+        const result = await this.perform("getStakingTransactionByHash", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getStakingTransactionByHash",
+                params, result, error
+            });
+        }
+    }
+
+    async sendRawStakingTransaction(signedTransaction: string | Promise<string>): Promise<TransactionResponse> {
+        await this.getNetwork();
+        const hexTx = await Promise.resolve(signedTransaction).then(t => hexlify(t));
+        const tx = this.formatter.transaction(signedTransaction);
+        try {
+            const hash = await this.perform("sendRawStakingTransaction", { signedTransaction: hexTx });
+            return this._wrapTransaction(tx, hash);
+        } catch (error) {
+            (<any>error).transaction = tx;
+            (<any>error).transactionHash = tx.hash;
+            throw error;
+        }
+    }
+
+    //Transfer
+    async getCurrentTransactionErrorSink(): Promise<TransactionError[]> {
+        await this.getNetwork();
+        const params = {};
+
+        const result = await this.perform("getCurrentTransactionErrorSink", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getCurrentTransactionErrorSink",
+                params, result, error
+            });
+        }
+    }
+
+    async getTransactionByBlockNumberAndIndex(blockNumber: number, transactionIndex: number): Promise<Transaction> {
+        await this.getNetwork();
+        const params = {
+            blockNumber: blockNumber,
+            transactionIndex: transactionIndex,
+        };
+
+        const result = await this.perform("getTransactionByBlockNumberAndIndex", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getTransactionByBlockNumberAndIndex",
+                params, result, error
+            });
+        }
+    }
+
+    async getTransactionByBlockHashAndIndex(blockHash: string, transactionIndex: number): Promise<Transaction> {
+        await this.getNetwork();
+        const params = {
+            blockHash: blockHash,
+            transactionIndex: transactionIndex,
+        };
+
+        const result = await this.perform("getTransactionByBlockHashAndIndex", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getTransactionByBlockHashAndIndex",
+                params, result, error
+            });
+        }
+    }
+
+    async getTransactionByHash(blockHash: string): Promise<Transaction> {
+        await this.getNetwork();
+        const params = {
+            blockHash: blockHash,
+        };
+
+        const result = await this.perform("getTransactionByHash", params); 
+        try {
+            return result;
+        } catch (error) {
+            return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                method: "getTransactionByHash",
+                params, result, error
+            });
+        }
+    }
+
+    async getTransactionReceipt(transactionHash: string | Promise<string>): Promise<TransactionReceipt> {
+        await this.getNetwork();
+
+        transactionHash = await transactionHash;
+
+        const params = { transactionHash: this.formatter.hash(transactionHash, true) };
+
+        return poll(async () => {
+            const result = await this.perform("getTransactionReceipt", params);
+
+            if (result == null) {
+                if (this._emitted["t:" + transactionHash] == null) {
+                    return null;
+                }
+                return undefined;
+            }
+
+            // "geth-etc" returns receipts before they are ready
+            if (result.blockHash == null) { return undefined; }
+
+            const receipt = this.formatter.receipt(result);
+
+            if (receipt.blockNumber == null) {
+                receipt.confirmations = 0;
+
+            } else if (receipt.confirmations == null) {
+                const blockNumber = await this._getInternalBlockNumber(100 + 2 * this.pollingInterval);
+
+                // Add the confirmations using the fast block number (pessimistic)
+                let confirmations = (blockNumber - receipt.blockNumber) + 1;
+                if (confirmations <= 0) { confirmations = 1; }
+                receipt.confirmations = confirmations;
+            }
+
+            return receipt;
+        }, { oncePoll: this });
+    }
+
+    async sendRawransaction(signedTransaction: string | Promise<string>): Promise<TransactionResponse> {
+        await this.getNetwork();
+        const hexTx = await Promise.resolve(signedTransaction).then(t => hexlify(t));
+        const tx = this.formatter.transaction(signedTransaction);
+        try {
+            const hash = await this.perform("sendRawransaction", { signedTransaction: hexTx });
+            return this._wrapTransaction(tx, hash);
+        } catch (error) {
+            (<any>error).transaction = tx;
+            (<any>error).transactionHash = tx.hash;
+            throw error;
         }
     }
 }
