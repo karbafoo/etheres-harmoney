@@ -28071,7 +28071,7 @@
 
 	var web3Provider$1 = /*@__PURE__*/getDefaultExportFromCjs(web3Provider);
 
-	var HARMONY_ENDPOINTS = createCommonjsModule(function (module, exports) {
+	var harmonyRcpApi = createCommonjsModule(function (module, exports) {
 	"use strict";
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.localnet = exports.testnet = exports.mainnet = void 0;
@@ -28094,7 +28094,7 @@
 
 	});
 
-	var HARMONY_ENDPOINTS$1 = /*@__PURE__*/getDefaultExportFromCjs(HARMONY_ENDPOINTS);
+	var harmonyRcpApi$1 = /*@__PURE__*/getDefaultExportFromCjs(harmonyRcpApi);
 
 	var harmonyProvider = createCommonjsModule(function (module, exports) {
 	"use strinct";
@@ -28275,7 +28275,7 @@
 	        if (this._address) {
 	            return Promise.resolve(this._address);
 	        }
-	        return this.provider.send(requestPrefix + "ccounts", []).then(function (accounts) {
+	        return this.provider.send(requestPrefix + "accounts", []).then(function (accounts) {
 	            if (accounts.length <= _this._index) {
 	                logger.throwError("unknown account #" + _this._index, lib.Logger.errors.UNSUPPORTED_OPERATION, {
 	                    operation: "getAddress"
@@ -28312,10 +28312,10 @@
 	                tx.from = sender;
 	            }
 	            var hexTx = _this.provider.constructor.hexlifyTransaction(tx, { from: true });
-	            return _this.provider.send(requestPrefix + "sendTransaction", [hexTx]).then(function (hash) {
+	            return _this.provider.send(requestPrefix + "sendRawTransaction", [hexTx]).then(function (hash) {
 	                return hash;
 	            }, function (error) {
-	                return checkError("sendTransaction", error, hexTx);
+	                return checkError("sendRawTransaction", error, hexTx);
 	            });
 	        });
 	    };
@@ -28447,7 +28447,7 @@
 	            });
 	        }
 	        _this = _super.call(this, networkOrReady) || this;
-	        url = url ? url : _this.getURL(HARMONY_ENDPOINTS.testnet[0]);
+	        url = url ? url : _this.getURL(harmonyRcpApi.testnet[0]);
 	        // Default URL
 	        if (!url) {
 	            url = lib$3.getStatic(_this.constructor, "defaultUrl")();
@@ -28467,7 +28467,7 @@
 	        return 'https://' + u + '/';
 	    };
 	    HarmonyRpcProvider.defaultUrl = function () {
-	        return HARMONY_ENDPOINTS.localnet[0];
+	        return harmonyRcpApi.localnet[0];
 	    };
 	    HarmonyRpcProvider.prototype.detectNetwork = function () {
 	        return __awaiter(this, void 0, void 0, function () {
@@ -28576,7 +28576,6 @@
 	            request: lib$3.deepCopy(request),
 	            provider: this
 	        });
-	        console.log('this.connetion', this.connection);
 	        return lib$q.fetchJson(this.connection, JSON.stringify(request), getResult).then(function (result) {
 	            _this.emit("debug", {
 	                action: "response",
@@ -28597,47 +28596,261 @@
 	    };
 	    HarmonyRpcProvider.prototype.prepareRequest = function (method, params) {
 	        switch (method) {
-	            case "getBlockNumberOld":
-	                return ["eth_blockNumber", []];
-	            case "getBlockNumber":
-	                return [requestPrefix + "blockNumber", []];
-	            case "getGasPrice":
-	                return [requestPrefix + "gasPrice", []];
-	            case "getBalance":
-	                return [requestPrefix + "getBalance", [getLowerCase(params.address)]];
-	            case "getTransactionCount":
-	                return [requestPrefix + "getTransactionCount", [getLowerCase(params.address), params.blockTag]];
-	            case "getCode":
-	                return [requestPrefix + "getCode", [getLowerCase(params.address), params.blockTag]];
-	            case "getStorageAt":
-	                return [requestPrefix + "getStorageAt", [getLowerCase(params.address), params.position, params.blockTag]];
-	            case "sendTransaction":
-	                return [requestPrefix + "sendRawTransaction", [params.signedTransaction]];
-	            case "getBlock":
-	                if (params.blockTag) {
-	                    return [requestPrefix + "getBlockByNumber", [params.blockTag, !!params.includeTransactions]];
+	            // case "getBlockNumber":
+	            //     return [ requestPrefix + "blockNumber", [] ];
+	            // case "getGasPrice":
+	            //     return [ requestPrefix + "gasPrice", [] ];
+	            // case "getBalance":
+	            //     return [ requestPrefix + "getBalance", [ getLowerCase(params.address) ] ];
+	            // case "getTransactionCount":
+	            //     return [ requestPrefix + "getTransactionCount", [ getLowerCase(params.address), params.blockTag ] ];
+	            // case "getCode":
+	            //     return [ requestPrefix + "getCode", [ getLowerCase(params.address), params.blockTag ] ];
+	            // case "getStorageAt":
+	            //     return [ requestPrefix + "getStorageAt", [ getLowerCase(params.address), params.position, params.blockTag ] ];
+	            // case "sendRawTransaction":
+	            //     return [ requestPrefix + "sendRawTransaction", [ params.signedTransaction ] ]
+	            // case "getBlock":
+	            //     if (params.blockTag) {
+	            //         return [ requestPrefix + "getBlockByNumber", [ params.blockTag, !!params.includeTransactions ] ];
+	            //     } else if (params.blockHash) {
+	            //         return [ requestPrefix + "getBlockByHash", [ params.blockHash, !!params.includeTransactions ] ];
+	            //     }
+	            //     return null;
+	            // case "getTransaction":
+	            //     return [ requestPrefix + "getTransactionByHash", [ params.transactionHash ] ];
+	            // case "getTransactionReceipt":
+	            //     return [ requestPrefix + "getTransactionReceipt", [ params.transactionHash ] ];
+	            // case "call": {
+	            //     const hexlifyTransaction = getStatic<(t: TransactionRequest, a?: { [key: string]: boolean }) => { [key: string]: string }>(this.constructor, "hexlifyTransaction");
+	            //     return [ requestPrefix + "call", [ hexlifyTransaction(params.transaction, { from: true }), params.blockTag ] ];
+	            // }
+	            // case "estimateGas": {
+	            //     const hexlifyTransaction = getStatic<(t: TransactionRequest, a?: { [key: string]: boolean }) => { [key: string]: string }>(this.constructor, "hexlifyTransaction");
+	            //     return [ requestPrefix + "estimateGas", [ hexlifyTransaction(params.transaction, { from: true }) ] ];
+	            // }
+	            case "getLogs":
+	                if (params.filter && params.filter.address != null) {
+	                    params.filter.address = getLowerCase(params.filter.address);
 	                }
-	                else if (params.blockHash) {
-	                    return [requestPrefix + "getBlockByHash", [params.blockHash, !!params.includeTransactions]];
-	                }
-	                return null;
-	            case "getTransaction":
-	                return [requestPrefix + "getTransactionByHash", [params.transactionHash]];
-	            case "getTransactionReceipt":
-	                return [requestPrefix + "getTransactionReceipt", [params.transactionHash]];
+	                return ["eth_getLogs", [params.filter]];
+	            default:
+	                break;
+	        }
+	        switch (method) {
 	            case "call": {
 	                var hexlifyTransaction = lib$3.getStatic(this.constructor, "hexlifyTransaction");
 	                return [requestPrefix + "call", [hexlifyTransaction(params.transaction, { from: true }), params.blockTag]];
 	            }
 	            case "estimateGas": {
 	                var hexlifyTransaction = lib$3.getStatic(this.constructor, "hexlifyTransaction");
-	                return [requestPrefix + "estimateGas", [hexlifyTransaction(params.transaction, { from: true })]];
+	                return [requestPrefix + "estimateGas", [hexlifyTransaction(params.transaction, { from: true }), params.blockTag]];
 	            }
-	            case "getLogs":
-	                if (params.filter && params.filter.address != null) {
-	                    params.filter.address = getLowerCase(params.filter.address);
-	                }
-	                return [requestPrefix + "getLogs", [params.filter]];
+	            case "getCode": {
+	                return [requestPrefix + "getCode", [getLowerCase(params.address), params.blockTag]];
+	            }
+	            case "getStorageAt":
+	                return [requestPrefix + "getStorageAt", [getLowerCase(params.address), params.position, params.blockTag]];
+	            ///
+	            case "getDelegationsByDelegator": {
+	                return [requestPrefix + "getDelegationsByDelegator", [getLowerCase(params.delegator)]];
+	            }
+	            case "getDelegationsByDelegatorByBlockNumber": {
+	                return [requestPrefix + "getDelegationsByDelegatorByBlockNumber", [getLowerCase(params.delegator), params.blockNumber]];
+	            }
+	            case "getDelegationsByValidator": {
+	                return [requestPrefix + "getDelegationsByValidator", [getLowerCase(params.validator)]];
+	            }
+	            ///
+	            case "getAllValidatorAddresses": {
+	                return [requestPrefix + "getAllValidatorAddresses", []];
+	            }
+	            case "getAllValidatorInformation": {
+	                return [requestPrefix + "getAllValidatorInformation", [params.pageIndex]];
+	            }
+	            case "getAllValidatorInformationByBlockNumber": {
+	                return [requestPrefix + "getAllValidatorInformationByBlockNumber", [params.pageIndex, params.blockNumber]];
+	            }
+	            case "getElectedValidatorAddresses": {
+	                return [requestPrefix + "getElectedValidatorAddresses", []];
+	            }
+	            case "getValidatorInformation": {
+	                return [requestPrefix + "getValidatorInformation", [getLowerCase(params.validator)]];
+	            }
+	            ///
+	            case "getCurrentUtilityMetrics": {
+	                return [requestPrefix + "getCurrentUtilityMetrics", []];
+	            }
+	            case "getMedianRawStakeSnapshot": {
+	                return [requestPrefix + "getMedianRawStakeSnapshot", []];
+	            }
+	            case "getStakingNetworkInfo": {
+	                return [requestPrefix + "getStakingNetworkInfo", []];
+	            }
+	            case "getSuperCommittees": {
+	                return [requestPrefix + "getSuperCommittees", []];
+	            }
+	            ///
+	            case "getCXReceiptByHash": {
+	                return [requestPrefix + "getCXReceiptByHash", [getLowerCase(params.cxHash)]];
+	            }
+	            case "getPendingCXReceipts": {
+	                return [requestPrefix + "getPendingCXReceipts", []];
+	            }
+	            case "resendCx": {
+	                return [requestPrefix + "resendCx", [getLowerCase(params.cxHash)]];
+	            }
+	            ///
+	            case "getPoolStats": {
+	                return [requestPrefix + "getPoolStats", []];
+	            }
+	            case "getPendingStakingTransaction": {
+	                return [requestPrefix + "pendingStakingTransaction", []];
+	            }
+	            case "getPendingTransactions": {
+	                return [requestPrefix + "pendingTransactions", []];
+	            }
+	            ///
+	            case "getCurrentStakingErrorSink": {
+	                return [requestPrefix + "getCurrentStakingErrorSink", []];
+	            }
+	            case "getStakingTransactionByBlockNumberAndIndex": {
+	                return [requestPrefix + "getStakingTransactionByBlockNumberAndIndex", [params.blockNumber, params.stakingTransactionIndex]];
+	            }
+	            case "getStakingTransactionByBlockHashAndIndex": {
+	                return [requestPrefix + "getStakingTransactionByBlockHashAndIndex", [getLowerCase(params.blockHash), params.stakingTransactionIndex]];
+	            }
+	            case "getStakingTransactionByHash": {
+	                return [requestPrefix + "getStakingTransactionByHash", [getLowerCase(params.txHash)]];
+	            }
+	            case "sendRawStakingTransaction": {
+	                return [requestPrefix + "sendRawStakingTransaction", [params.signedTransaction]];
+	            }
+	            ///
+	            case "getCurrentTransactionErrorSink": {
+	                return [requestPrefix + "getCurrentTransactionErrorSink", []];
+	            }
+	            case "getTransactionByBlockNumberAndIndex": {
+	                return [requestPrefix + "getTransactionByBlockNumberAndIndex", [params.blockNumber, params.transactionIndex]];
+	            }
+	            case "getTransactionByBlockHashAndIndex": {
+	                return [requestPrefix + "getTransactionByBlockHashAndIndex", [getLowerCase(params.blockHash), params.transactionIndex]];
+	            }
+	            case "getTransactionByHash": {
+	                return [requestPrefix + "getTransactionByHash", [getLowerCase(params.txHash)]];
+	            }
+	            case "getTransactionReceipt":
+	                return [requestPrefix + "getTransactionReceipt", [params.transactionHash]];
+	            case "sendRawTransaction": {
+	                return [requestPrefix + "sendRawTransaction", [params.signedTransaction]];
+	            }
+	            //
+	            ///
+	            case "getBlockNumber": {
+	                return [requestPrefix + "blockNumber", []];
+	            }
+	            case "getCirculatingSupply": {
+	                return [requestPrefix + "getCirculatingSupply", []];
+	            }
+	            case "getEpoch": {
+	                return [requestPrefix + "getEpoch", []];
+	            }
+	            case "getLastCrossLinks": {
+	                return [requestPrefix + "getLastCrossLinks", []];
+	            }
+	            case "getLeader": {
+	                return [requestPrefix + "getLeader", []];
+	            }
+	            case "getGasPrice": {
+	                return [requestPrefix + "gasPrice", []];
+	            }
+	            case "getShardingStructure": {
+	                return [requestPrefix + "getShardingStructure", []];
+	            }
+	            case "getTotalSupply": {
+	                return [requestPrefix + "getTotalSupply", []];
+	            }
+	            case "getValidators": {
+	                return [requestPrefix + "getValidators", [params.epochNumber]];
+	            }
+	            case "getValidatorKeys": {
+	                return [requestPrefix + "getValidatorKeys", [params.epochNumber]];
+	            }
+	            ///
+	            case "getCurrentBadBlocks": {
+	                return [requestPrefix + "getCurrentBadBlocks", []];
+	            }
+	            case "getNodeMetadata": {
+	                return [requestPrefix + "getNodeMetadata", []];
+	            }
+	            case "getProtocolVersion": {
+	                return [requestPrefix + "protocolVersion", []];
+	            }
+	            case "getPeerCount": {
+	                return [requestPrefix + "peerCount", []];
+	            }
+	            ///
+	            case "getBlocks": {
+	                return [requestPrefix + "getBlocks", [params.startingBlock, params.endingBlock, params.extra]];
+	            }
+	            case "getBlockByNumber": {
+	                return [requestPrefix + "getBlockByNumber", [params.blockNumber, params.extra]];
+	            }
+	            case "getBlockByHash": {
+	                return [requestPrefix + "getBlockByHash", [getLowerCase(params.blockHash), params.extra]];
+	            }
+	            case "getBlockSigners": {
+	                return [requestPrefix + "getBlockSigners", [params.startingBlock, params.endingBlock, params.extra]];
+	            }
+	            case "getBlockSignersKeys": {
+	                return [requestPrefix + "getBlockSignersKeys", [params.blockNumber]];
+	            }
+	            case "getBlockTransactionCountByNumber": {
+	                return [requestPrefix + "getBlockTransactionCountByNumber", [params.blockNumber]];
+	            }
+	            case "getBlockTransactionCountByHash": {
+	                return [requestPrefix + "getBlockTransactionCountByHash", [getLowerCase(params.blockHash)]];
+	            }
+	            case "getHeaderByNumber": {
+	                return [requestPrefix + "getHeaderByNumber", [params.blockNumber]];
+	            }
+	            case "getLatestChainHeaders": {
+	                return [requestPrefix + "getLatestChainHeaders", []];
+	            }
+	            case "getLatestHeaders": {
+	                return [requestPrefix + "latestHeader", []];
+	            }
+	            //
+	            case "getBalance":
+	                return [requestPrefix + "getBalance", [getLowerCase(params.address)]];
+	            case "getBalanceByBlockNumber":
+	                return [requestPrefix + "getBalanceByBlockNumber", [getLowerCase(params.address), params.blockTag]];
+	            case "getStakingTransactionsCount":
+	                return [requestPrefix + "getStakingTransactionsCount", [getLowerCase(params.address), params.transactionType]];
+	            case "getStakingTransactionsHistory":
+	                return [requestPrefix + "getStakingTransactionsHistory", [{
+	                            address: getLowerCase(params.address),
+	                            pageIndex: params.pageIndex,
+	                            pageSize: params.pageSize,
+	                            fullTx: params.fullTx,
+	                            txType: params.txType,
+	                            order: params.order,
+	                        }]];
+	            case "getTransactionsCount":
+	                return [requestPrefix + "getTransactionsCount", [getLowerCase(params.address), params.transactionType]];
+	            case "getTransactionsHistory":
+	                return [requestPrefix + "getTransactionsHistory", [{
+	                            address: getLowerCase(params.address),
+	                            pageIndex: params.pageIndex,
+	                            pageSize: params.pageSize,
+	                            fullTx: params.fullTx,
+	                            txType: params.txType,
+	                            order: params.order,
+	                        }]];
+	            ///
+	            case "xxxxxx": {
+	                return [requestPrefix + "xxxxxx", []];
+	            }
 	            default:
 	                break;
 	        }
@@ -28761,7 +28974,70 @@
 	        }
 	        return result;
 	    };
-	    HarmonyRpcProvider.prototype.getBalance = function (addressOrName, blockTag) {
+	    // Smart Contract
+	    //ALERT HARMONY <TransactionRequest>
+	    HarmonyRpcProvider.prototype.call = function (transaction, blockTag) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params, result;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                transaction: this._getTransactionRequest(transaction),
+	                                blockTag: this._getBlockTag(blockTag)
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [4 /*yield*/, this.perform("call", params)];
+	                    case 3:
+	                        result = _a.sent();
+	                        try {
+	                            return [2 /*return*/, lib$1.hexlify(result)];
+	                        }
+	                        catch (error) {
+	                            return [2 /*return*/, logger.throwError("bad result from backend", lib.Logger.errors.SERVER_ERROR, {
+	                                    method: "call",
+	                                    params: params, result: result, error: error
+	                                })];
+	                        }
+	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.estimateGas = function (transaction) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params, result;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                transaction: this._getTransactionRequest(transaction)
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [4 /*yield*/, this.perform("estimateGas", params)];
+	                    case 3:
+	                        result = _a.sent();
+	                        try {
+	                            return [2 /*return*/, lib$2.BigNumber.from(result)];
+	                        }
+	                        catch (error) {
+	                            return [2 /*return*/, logger.throwError("bad result from backend", lib.Logger.errors.SERVER_ERROR, {
+	                                    method: "estimateGas",
+	                                    params: params, result: result, error: error
+	                                })];
+	                        }
+	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getCode = function (addressOrName, blockTag) {
 	        return __awaiter(this, void 0, void 0, function () {
 	            var params, result;
 	            return __generator(this, function (_a) {
@@ -28775,10 +29051,516 @@
 	                            })];
 	                    case 2:
 	                        params = _a.sent();
+	                        return [4 /*yield*/, this.perform("getCode", params)];
+	                    case 3:
+	                        result = _a.sent();
+	                        try {
+	                            return [2 /*return*/, lib$1.hexlify(result)];
+	                        }
+	                        catch (error) {
+	                            return [2 /*return*/, logger.throwError("bad result from backend", lib.Logger.errors.SERVER_ERROR, {
+	                                    method: "getCode",
+	                                    params: params, result: result, error: error
+	                                })];
+	                        }
+	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getStorageAt = function (addressOrName, position, blockTag) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params, result;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                address: this._getAddress(addressOrName),
+	                                position: Promise.resolve(position).then(function (p) { return lib$1.hexValue(p); }),
+	                                blockTag: this._getBlockTag(blockTag)
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [4 /*yield*/, this.perform("getStorageAt", params)];
+	                    case 3:
+	                        result = _a.sent();
+	                        try {
+	                            return [2 /*return*/, lib$1.hexlify(result)];
+	                        }
+	                        catch (error) {
+	                            return [2 /*return*/, logger.throwError("bad result from backend", lib.Logger.errors.SERVER_ERROR, {
+	                                    method: "getStorageAt",
+	                                    params: params, result: result, error: error
+	                                })];
+	                        }
+	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
+	    // Blockchain
+	    //Network
+	    HarmonyRpcProvider.prototype.getBlockNumber = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params, result;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0:
+	                        params = {};
+	                        return [4 /*yield*/, this.perform("getBlockNumber", params)];
+	                    case 1:
+	                        result = _a.sent();
+	                        try {
+	                            return [2 /*return*/, lib$2.BigNumber.from(result).toNumber()];
+	                        }
+	                        catch (error) {
+	                            return [2 /*return*/, logger.throwError("bad result from backend", lib.Logger.errors.SERVER_ERROR, {
+	                                    method: "getBlockNumber",
+	                                    params: params, result: result, error: error
+	                                })];
+	                        }
+	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getCirculatingSupply = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params, result;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0:
+	                        params = {};
+	                        return [4 /*yield*/, this.perform("getCirculatingSupply", params)];
+	                    case 1:
+	                        result = _a.sent();
+	                        try {
+	                            return [2 /*return*/, lib$2.BigNumber.from(result).toNumber()];
+	                        }
+	                        catch (error) {
+	                            return [2 /*return*/, logger.throwError("bad result from backend", lib.Logger.errors.SERVER_ERROR, {
+	                                    method: "getCirculatingSupply",
+	                                    params: params, result: result, error: error
+	                                })];
+	                        }
+	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getEpoch = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params, result;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0:
+	                        params = {};
+	                        return [4 /*yield*/, this.perform("getEpoch", params)];
+	                    case 1:
+	                        result = _a.sent();
+	                        try {
+	                            return [2 /*return*/, lib$2.BigNumber.from(result).toNumber()];
+	                        }
+	                        catch (error) {
+	                            return [2 /*return*/, logger.throwError("bad result from backend", lib.Logger.errors.SERVER_ERROR, {
+	                                    method: "getEpoch",
+	                                    params: params, result: result, error: error
+	                                })];
+	                        }
+	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getLastCrossLinks = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                params = {};
+	                return [2 /*return*/, this.perform("getLastCrossLinks", params)];
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getLeader = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                params = {};
+	                return [2 /*return*/, this.perform("getLeader", params)];
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getGasPrice = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params, result;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0:
+	                        params = {};
+	                        return [4 /*yield*/, this.perform("getGasPrice", params)];
+	                    case 1:
+	                        result = _a.sent();
+	                        try {
+	                            return [2 /*return*/, lib$2.BigNumber.from(result)];
+	                        }
+	                        catch (error) {
+	                            return [2 /*return*/, logger.throwError("bad result from backend", lib.Logger.errors.SERVER_ERROR, {
+	                                    method: "getGasPrice",
+	                                    params: params, result: result, error: error
+	                                })];
+	                        }
+	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getShardingStructure = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                params = {};
+	                return [2 /*return*/, this.perform("getShardingStructure", params)];
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getTotalSupply = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params, result;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0:
+	                        params = {};
+	                        return [4 /*yield*/, this.perform("getTotalSupply", params)];
+	                    case 1:
+	                        result = _a.sent();
+	                        try {
+	                            return [2 /*return*/, lib$2.BigNumber.from(result)];
+	                        }
+	                        catch (error) {
+	                            return [2 /*return*/, logger.throwError("bad result from backend", lib.Logger.errors.SERVER_ERROR, {
+	                                    method: "getTotalSupply",
+	                                    params: params, result: result, error: error
+	                                })];
+	                        }
+	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getValidators = function (epochNumber) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, lib$3.resolveProperties({
+	                            epochNumber: epochNumber,
+	                        })];
+	                    case 1:
+	                        params = _a.sent();
+	                        return [2 /*return*/, this.perform("getValidators", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getValidatorKeys = function (epochNumber) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, lib$3.resolveProperties({
+	                            epochNumber: epochNumber,
+	                        })];
+	                    case 1:
+	                        params = _a.sent();
+	                        return [2 /*return*/, this.perform("getValidatorKeys", params)];
+	                }
+	            });
+	        });
+	    };
+	    //Node
+	    HarmonyRpcProvider.prototype.getCurrentBadBlocks = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                params = {};
+	                return [2 /*return*/, this.perform("getCurrentBadBlocks", params)];
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getNodeMetadata = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                params = {};
+	                return [2 /*return*/, this.perform("getNodeMetadata", params)];
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getProtocolVersion = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params, result;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0:
+	                        params = {};
+	                        return [4 /*yield*/, this.perform("getProtocolVersion", params)];
+	                    case 1:
+	                        result = _a.sent();
+	                        try {
+	                            return [2 /*return*/, lib$2.BigNumber.from(result).toNumber()];
+	                        }
+	                        catch (error) {
+	                            return [2 /*return*/, logger.throwError("bad result from backend", lib.Logger.errors.SERVER_ERROR, {
+	                                    method: "getProtocolVersion",
+	                                    params: params, result: result, error: error
+	                                })];
+	                        }
+	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getPeerCount = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                params = {};
+	                return [2 /*return*/, this.perform("getPeerCount", params)];
+	            });
+	        });
+	    };
+	    //Blocks
+	    HarmonyRpcProvider.prototype.getBlocks = function (startingBlock, endingBlock, extra) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                startingBlock: startingBlock,
+	                                endingBlock: endingBlock,
+	                                extra: extra,
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [2 /*return*/, this.perform("getBlocks", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getBlockByNumber = function (blockNumber, extra) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                blockNumber: blockNumber,
+	                                extra: extra,
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [2 /*return*/, this.perform("getBlockByNumber", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getBlockByHash = function (blockHash, extra) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                blockHash: blockHash,
+	                                extra: extra,
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [2 /*return*/, this.perform("getBlockByHash", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getBlockSigners = function (startingBlock, endingBlock, extra) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                startingBlock: startingBlock,
+	                                endingBlock: endingBlock,
+	                                extra: extra,
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [2 /*return*/, this.perform("getBlockSigners", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getBlockSignersKeys = function (blockNumber) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                blockNumber: blockNumber,
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [2 /*return*/, this.perform("getBlockSignersKeys", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getBlockTransactionCountByNumber = function (blockNumber) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params, result;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                blockNumber: blockNumber,
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        result = this.perform("getBlockTransactionCountByNumber", params);
+	                        try {
+	                            return [2 /*return*/, lib$2.BigNumber.from(result).toNumber()];
+	                        }
+	                        catch (error) {
+	                            return [2 /*return*/, logger.throwError("bad result from backend", lib.Logger.errors.SERVER_ERROR, {
+	                                    method: "getBlockTransactionCountByNumber",
+	                                    params: params, result: result, error: error
+	                                })];
+	                        }
+	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getBlockTransactionCountByHash = function (blockHash) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params, result;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                blockHash: blockHash,
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [4 /*yield*/, this.perform("getBlockTransactionCountByHash", params)];
+	                    case 3:
+	                        result = _a.sent();
+	                        try {
+	                            return [2 /*return*/, lib$2.BigNumber.from(result).toNumber()];
+	                        }
+	                        catch (error) {
+	                            return [2 /*return*/, logger.throwError("bad result from backend", lib.Logger.errors.SERVER_ERROR, {
+	                                    method: "getBlockTransactionCountByHash",
+	                                    params: params, result: result, error: error
+	                                })];
+	                        }
+	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getHeaderByNumber = function (blockNumber) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                blockNumber: blockNumber,
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [2 /*return*/, this.perform("getHeaderByNumber", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getLatestChainHeaders = function (blockNumber) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {};
+	                        return [2 /*return*/, this.perform("getLatestChainHeaders", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getLatestHeader = function (blockNumber) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params, result;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {};
+	                        return [4 /*yield*/, this.perform("getLatestHeader", params)];
+	                    case 2:
+	                        result = _a.sent();
+	                        try {
+	                            return [2 /*return*/, result];
+	                        }
+	                        catch (error) {
+	                            return [2 /*return*/, logger.throwError("bad result from backend", lib.Logger.errors.SERVER_ERROR, {
+	                                    method: "getLatestHeader",
+	                                    params: params, result: result, error: error
+	                                })];
+	                        }
+	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
+	    // Account
+	    HarmonyRpcProvider.prototype.getBalance = function (addressOrName) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params, result;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                address: this._getAddress(addressOrName)
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
 	                        return [4 /*yield*/, this.perform("getBalance", params)];
 	                    case 3:
 	                        result = _a.sent();
-	                        console.log('getbalance', BigInt(result));
 	                        try {
 	                            return [2 /*return*/, lib$2.BigNumber.from(BigInt(result))];
 	                        }
@@ -28789,6 +29571,690 @@
 	                                })];
 	                        }
 	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getBalanceByBlockNumber = function (addressOrName, blockTag) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params, result;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                address: this._getAddress(addressOrName),
+	                                blockTag: this._getBlockTag(blockTag)
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [4 /*yield*/, this.perform("getBalanceByBlockNumber", params)];
+	                    case 3:
+	                        result = _a.sent();
+	                        try {
+	                            return [2 /*return*/, lib$2.BigNumber.from(BigInt(result))];
+	                        }
+	                        catch (error) {
+	                            return [2 /*return*/, logger.throwError("bad result from backend", lib.Logger.errors.SERVER_ERROR, {
+	                                    method: "getBalanceByBlockNumber",
+	                                    params: params, result: result, error: error
+	                                })];
+	                        }
+	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getStakingTransactionsCount = function (addressOrName, transactionType) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params, result;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                address: this._getAddress(addressOrName),
+	                                transactionType: transactionType
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [4 /*yield*/, this.perform("getStakingTransactionsCount", params)];
+	                    case 3:
+	                        result = _a.sent();
+	                        try {
+	                            return [2 /*return*/, lib$2.BigNumber.from(BigInt(result)).toNumber()];
+	                        }
+	                        catch (error) {
+	                            return [2 /*return*/, logger.throwError("bad result from backend", lib.Logger.errors.SERVER_ERROR, {
+	                                    method: "getStakingTransactionsCount",
+	                                    params: params, result: result, error: error
+	                                })];
+	                        }
+	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getStakingTransactionsHistory = function (addressOrName, pageIndex, pageSize, fullTx, txType, order) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                address: this._getAddress(addressOrName),
+	                                pageIndex: pageIndex,
+	                                pageSize: pageSize,
+	                                fullTx: fullTx,
+	                                txType: txType,
+	                                order: order,
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [2 /*return*/, this.perform("getStakingTransactionsHistory", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getTransactionsCount = function (addressOrName, transactionType) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params, result;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                address: this._getAddress(addressOrName),
+	                                transactionType: transactionType
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [4 /*yield*/, this.perform("getTransactionsCount", params)];
+	                    case 3:
+	                        result = _a.sent();
+	                        try {
+	                            return [2 /*return*/, lib$2.BigNumber.from(BigInt(result)).toNumber()];
+	                        }
+	                        catch (error) {
+	                            return [2 /*return*/, logger.throwError("bad result from backend", lib.Logger.errors.SERVER_ERROR, {
+	                                    method: "getTransactionsCount",
+	                                    params: params, result: result, error: error
+	                                })];
+	                        }
+	                        return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getTransactionsHistory = function (addressOrName, pageIndex, pageSize, fullTx, txType, order) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                address: this._getAddress(addressOrName),
+	                                pageIndex: pageIndex,
+	                                pageSize: pageSize,
+	                                fullTx: fullTx,
+	                                txType: txType,
+	                                order: order,
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [2 /*return*/, this.perform("getTransactionsHistory", params)];
+	                }
+	            });
+	        });
+	    };
+	    ///////////// END /////////
+	    //Staking
+	    //Delegation
+	    HarmonyRpcProvider.prototype.getDelegationsByDelegator = function (delegator) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                delegator: this._getAddress(delegator),
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [2 /*return*/, this.perform("getDelegationsByDelegator", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getDelegationsByDelegatorByBlockNumber = function (delegator, blockNumber) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                delegator: this._getAddress(delegator),
+	                                blockNumber: blockNumber
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [2 /*return*/, this.perform("getDelegationsByDelegatorByBlockNumber", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getDelegationsByValidator = function (validator) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                validator: this._getAddress(validator),
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [2 /*return*/, this.perform("getDelegationsByValidator", params)];
+	                }
+	            });
+	        });
+	    };
+	    // async getDelegationsByValidatorByBlockNumber(validator: string | Promise<string>, blockNumber: number): Promise<Delegation[]> {
+	    //     await this.getNetwork();
+	    //     const params = await resolveProperties({
+	    //         validator: this._getAddress(validator),
+	    //         blockNumber: blockNumber
+	    //     });
+	    //     const result = await this.perform("getDelegationsByValidatorByBlockNumber", params); 
+	    //     try {
+	    //         return result;
+	    //     } catch (error) {
+	    //         return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+	    //             method: "getDelegationsByValidatorByBlockNumber",
+	    //             params, result, error
+	    //         });
+	    //     }
+	    // }
+	    // Validator
+	    HarmonyRpcProvider.prototype.getAllValidatorAddresses = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {};
+	                        return [2 /*return*/, this.perform("getAllValidatorAddresses", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getAllValidatorInformation = function (pageIndex) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {
+	                            pageIndex: pageIndex
+	                        };
+	                        return [2 /*return*/, this.perform("getAllValidatorInformation", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getAllValidatorInformationByBlockNumber = function (pageIndex, blockNumber) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {
+	                            pageIndex: pageIndex,
+	                            blockNumber: blockNumber,
+	                        };
+	                        return [2 /*return*/, this.perform("getAllValidatorInformationByBlockNumber", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getElectedValidatorAddresses = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {};
+	                        return [2 /*return*/, this.perform("getElectedValidatorAddresses", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getValidatorInformation = function (validator) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                validator: this._getAddress(validator),
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [2 /*return*/, this.perform("getValidatorInformation", params)];
+	                }
+	            });
+	        });
+	    };
+	    //Network
+	    HarmonyRpcProvider.prototype.getCurrentUtilityMetrics = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {};
+	                        return [2 /*return*/, this.perform("getCurrentUtilityMetrics", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getMedianRawStakeSnapshot = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {};
+	                        return [2 /*return*/, this.perform("getMedianRawStakeSnapshot", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getStakingNetworkInfo = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {};
+	                        return [2 /*return*/, this.perform("getStakingNetworkInfo", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getSuperCommittees = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {};
+	                        return [2 /*return*/, this.perform("getSuperCommittees", params)];
+	                }
+	            });
+	        });
+	    };
+	    //Transaction
+	    //Cross Shard
+	    HarmonyRpcProvider.prototype.getCXReceiptByHash = function (cxHash) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, lib$3.resolveProperties({
+	                                cxHash: cxHash,
+	                            })];
+	                    case 2:
+	                        params = _a.sent();
+	                        return [2 /*return*/, this.perform("getCXReceiptByHash", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getPendingCXReceipts = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {};
+	                        return [2 /*return*/, this.perform("getPendingCXReceipts", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.resendCx = function (cxHash) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {
+	                            cxHash: cxHash
+	                        };
+	                        return [2 /*return*/, this.perform("resendCx", params)];
+	                }
+	            });
+	        });
+	    };
+	    //Transaction Pool
+	    HarmonyRpcProvider.prototype.getPoolStats = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {};
+	                        return [2 /*return*/, this.perform("getPoolStats", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getPendingStakingTransaction = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {};
+	                        return [2 /*return*/, this.perform("getPendingStakingTransaction", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getPendingTransactions = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {};
+	                        return [2 /*return*/, this.perform("getPendingTransactions", params)];
+	                }
+	            });
+	        });
+	    };
+	    //Staking
+	    HarmonyRpcProvider.prototype.getCurrentStakingErrorSink = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {};
+	                        return [2 /*return*/, this.perform("getCurrentStakingErrorSink", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getStakingTransactionByBlockNumberAndIndex = function (blockNumber, stakingTransactionIndex) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {
+	                            blockNumber: blockNumber,
+	                            stakingTransactionIndex: stakingTransactionIndex,
+	                        };
+	                        return [2 /*return*/, this.perform("getStakingTransactionByBlockNumberAndIndex", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getStakingTransactionByBlockHashAndIndex = function (blockHash, stakingTransactionIndex) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {
+	                            blockHash: blockHash,
+	                            stakingTransactionIndex: stakingTransactionIndex,
+	                        };
+	                        return [2 /*return*/, this.perform("getStakingTransactionByBlockHashAndIndex", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getStakingTransactionByHash = function (txHash) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {
+	                            txHash: txHash,
+	                        };
+	                        return [2 /*return*/, this.perform("getStakingTransactionByHash", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.sendRawStakingTransaction = function (signedTransaction) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var hexTx, tx, hash, error_4;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, Promise.resolve(signedTransaction).then(function (t) { return lib$1.hexlify(t); })];
+	                    case 2:
+	                        hexTx = _a.sent();
+	                        tx = this.formatter.transaction(signedTransaction);
+	                        _a.label = 3;
+	                    case 3:
+	                        _a.trys.push([3, 5, , 6]);
+	                        return [4 /*yield*/, this.perform("sendRawStakingTransaction", { signedTransaction: hexTx })];
+	                    case 4:
+	                        hash = _a.sent();
+	                        return [2 /*return*/, this._wrapTransaction(tx, hash)];
+	                    case 5:
+	                        error_4 = _a.sent();
+	                        error_4.transaction = tx;
+	                        error_4.transactionHash = tx.hash;
+	                        throw error_4;
+	                    case 6: return [2 /*return*/];
+	                }
+	            });
+	        });
+	    };
+	    //Transfer
+	    HarmonyRpcProvider.prototype.getCurrentTransactionErrorSink = function () {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {};
+	                        return [2 /*return*/, this.perform("getCurrentTransactionErrorSink", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getTransactionByBlockNumberAndIndex = function (blockNumber, transactionIndex) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {
+	                            blockNumber: blockNumber,
+	                            transactionIndex: transactionIndex,
+	                        };
+	                        return [2 /*return*/, this.perform("getTransactionByBlockNumberAndIndex", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getTransactionByBlockHashAndIndex = function (blockHash, transactionIndex) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {
+	                            blockHash: blockHash,
+	                            transactionIndex: transactionIndex,
+	                        };
+	                        return [2 /*return*/, this.perform("getTransactionByBlockHashAndIndex", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getTransactionByHash = function (txHash) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        params = {
+	                            txHash: txHash,
+	                        };
+	                        return [2 /*return*/, this.perform("getTransactionByHash", params)];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.getTransactionReceipt = function (transactionHash) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var params;
+	            var _this = this;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, transactionHash];
+	                    case 2:
+	                        transactionHash = _a.sent();
+	                        params = { transactionHash: this.formatter.hash(transactionHash, true) };
+	                        return [2 /*return*/, lib$q.poll(function () { return __awaiter(_this, void 0, void 0, function () {
+	                                var result, receipt, blockNumber, confirmations;
+	                                return __generator(this, function (_a) {
+	                                    switch (_a.label) {
+	                                        case 0: return [4 /*yield*/, this.perform("getTransactionReceipt", params)];
+	                                        case 1:
+	                                            result = _a.sent();
+	                                            if (result == null) {
+	                                                if (this._emitted["t:" + transactionHash] == null) {
+	                                                    return [2 /*return*/, null];
+	                                                }
+	                                                return [2 /*return*/, undefined];
+	                                            }
+	                                            // "geth-etc" returns receipts before they are ready
+	                                            if (result.blockHash == null) {
+	                                                return [2 /*return*/, undefined];
+	                                            }
+	                                            receipt = this.formatter.receipt(result);
+	                                            if (!(receipt.blockNumber == null)) return [3 /*break*/, 2];
+	                                            receipt.confirmations = 0;
+	                                            return [3 /*break*/, 4];
+	                                        case 2:
+	                                            if (!(receipt.confirmations == null)) return [3 /*break*/, 4];
+	                                            return [4 /*yield*/, this._getInternalBlockNumber(100 + 2 * this.pollingInterval)];
+	                                        case 3:
+	                                            blockNumber = _a.sent();
+	                                            confirmations = (blockNumber - receipt.blockNumber) + 1;
+	                                            if (confirmations <= 0) {
+	                                                confirmations = 1;
+	                                            }
+	                                            receipt.confirmations = confirmations;
+	                                            _a.label = 4;
+	                                        case 4: return [2 /*return*/, receipt];
+	                                    }
+	                                });
+	                            }); }, { oncePoll: this })];
+	                }
+	            });
+	        });
+	    };
+	    HarmonyRpcProvider.prototype.sendRawTransaction = function (signedTransaction) {
+	        return __awaiter(this, void 0, void 0, function () {
+	            var hexTx, tx, hash, error_5;
+	            return __generator(this, function (_a) {
+	                switch (_a.label) {
+	                    case 0: return [4 /*yield*/, this.getNetwork()];
+	                    case 1:
+	                        _a.sent();
+	                        return [4 /*yield*/, Promise.resolve(signedTransaction).then(function (t) { return lib$1.hexlify(t); })];
+	                    case 2:
+	                        hexTx = _a.sent();
+	                        tx = this.formatter.transaction(signedTransaction);
+	                        _a.label = 3;
+	                    case 3:
+	                        _a.trys.push([3, 5, , 6]);
+	                        return [4 /*yield*/, this.perform("sendRawTransaction", { signedTransaction: hexTx })];
+	                    case 4:
+	                        hash = _a.sent();
+	                        return [2 /*return*/, this._wrapTransaction(tx, hash)];
+	                    case 5:
+	                        error_5 = _a.sent();
+	                        error_5.transaction = tx;
+	                        error_5.transactionHash = tx.hash;
+	                        throw error_5;
+	                    case 6: return [2 /*return*/];
 	                }
 	            });
 	        });

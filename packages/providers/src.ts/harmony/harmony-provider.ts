@@ -429,60 +429,338 @@ export class HarmonyRpcProvider extends BaseProvider {
 
     prepareRequest(method: string, params: any): [ string, Array<any> ] {
         switch (method) {
-            case "getBlockNumberOld":
-                return [ "eth_blockNumber", [] ];
-            case "getBlockNumber":
-                return [ requestPrefix + "blockNumber", [] ];
+            // case "getBlockNumber":
+            //     return [ requestPrefix + "blockNumber", [] ];
      
 
-            case "getGasPrice":
-                return [ requestPrefix + "gasPrice", [] ];
+            // case "getGasPrice":
+            //     return [ requestPrefix + "gasPrice", [] ];
 
-            case "getBalance":
-                return [ requestPrefix + "getBalance", [ getLowerCase(params.address) ] ];
+            // case "getBalance":
+            //     return [ requestPrefix + "getBalance", [ getLowerCase(params.address) ] ];
 
-            case "getTransactionCount":
-                return [ requestPrefix + "getTransactionCount", [ getLowerCase(params.address), params.blockTag ] ];
+            // case "getTransactionCount":
+            //     return [ requestPrefix + "getTransactionCount", [ getLowerCase(params.address), params.blockTag ] ];
 
-            case "getCode":
-                return [ requestPrefix + "getCode", [ getLowerCase(params.address), params.blockTag ] ];
+            // case "getCode":
+            //     return [ requestPrefix + "getCode", [ getLowerCase(params.address), params.blockTag ] ];
 
-            case "getStorageAt":
-                return [ requestPrefix + "getStorageAt", [ getLowerCase(params.address), params.position, params.blockTag ] ];
+            // case "getStorageAt":
+            //     return [ requestPrefix + "getStorageAt", [ getLowerCase(params.address), params.position, params.blockTag ] ];
 
-            case "sendRawTransaction":
-                return [ requestPrefix + "sendRawTransaction", [ params.signedTransaction ] ]
+            // case "sendRawTransaction":
+            //     return [ requestPrefix + "sendRawTransaction", [ params.signedTransaction ] ]
 
-            case "getBlock":
-                if (params.blockTag) {
-                    return [ requestPrefix + "getBlockByNumber", [ params.blockTag, !!params.includeTransactions ] ];
-                } else if (params.blockHash) {
-                    return [ requestPrefix + "getBlockByHash", [ params.blockHash, !!params.includeTransactions ] ];
-                }
-                return null;
+            // case "getBlock":
+            //     if (params.blockTag) {
+            //         return [ requestPrefix + "getBlockByNumber", [ params.blockTag, !!params.includeTransactions ] ];
+            //     } else if (params.blockHash) {
+            //         return [ requestPrefix + "getBlockByHash", [ params.blockHash, !!params.includeTransactions ] ];
+            //     }
+            //     return null;
 
-            case "getTransaction":
-                return [ requestPrefix + "getTransactionByHash", [ params.transactionHash ] ];
+            // case "getTransaction":
+            //     return [ requestPrefix + "getTransactionByHash", [ params.transactionHash ] ];
 
-            case "getTransactionReceipt":
-                return [ requestPrefix + "getTransactionReceipt", [ params.transactionHash ] ];
+            // case "getTransactionReceipt":
+            //     return [ requestPrefix + "getTransactionReceipt", [ params.transactionHash ] ];
 
-            case "call": {
-                const hexlifyTransaction = getStatic<(t: TransactionRequest, a?: { [key: string]: boolean }) => { [key: string]: string }>(this.constructor, "hexlifyTransaction");
-                return [ requestPrefix + "call", [ hexlifyTransaction(params.transaction, { from: true }), params.blockTag ] ];
-            }
+            // case "call": {
+            //     const hexlifyTransaction = getStatic<(t: TransactionRequest, a?: { [key: string]: boolean }) => { [key: string]: string }>(this.constructor, "hexlifyTransaction");
+            //     return [ requestPrefix + "call", [ hexlifyTransaction(params.transaction, { from: true }), params.blockTag ] ];
+            // }
 
-            case "estimateGas": {
-                const hexlifyTransaction = getStatic<(t: TransactionRequest, a?: { [key: string]: boolean }) => { [key: string]: string }>(this.constructor, "hexlifyTransaction");
-                return [ requestPrefix + "estimateGas", [ hexlifyTransaction(params.transaction, { from: true }) ] ];
-            }
+            // case "estimateGas": {
+            //     const hexlifyTransaction = getStatic<(t: TransactionRequest, a?: { [key: string]: boolean }) => { [key: string]: string }>(this.constructor, "hexlifyTransaction");
+            //     return [ requestPrefix + "estimateGas", [ hexlifyTransaction(params.transaction, { from: true }) ] ];
+            // }
 
             case "getLogs":
                 if (params.filter && params.filter.address != null) {
                     params.filter.address = getLowerCase(params.filter.address);
                 }
-                return [ requestPrefix + "getLogs", [ params.filter ] ];
+                return ["eth_getLogs", [ params.filter ] ];
 
+            default:
+                break;
+        }
+
+        switch (method) {
+            case "call": {
+                const hexlifyTransaction = getStatic<(t: TransactionRequest, a?: { [key: string]: boolean }) => { [key: string]: string }>(this.constructor, "hexlifyTransaction");
+                return [ requestPrefix + "call", [ hexlifyTransaction(params.transaction, { from: true }), params.blockTag ] ];
+            }
+            case "estimateGas": {
+                const hexlifyTransaction = getStatic<(t: TransactionRequest, a?: { [key: string]: boolean }) => { [key: string]: string }>(this.constructor, "hexlifyTransaction");
+                return [ requestPrefix + "estimateGas", [ hexlifyTransaction(params.transaction, { from: true }), params.blockTag ] ];
+            }   
+
+            case "getCode": {
+                return [ requestPrefix + "getCode",  [ getLowerCase(params.address), params.blockTag]];
+            }
+
+            case "getStorageAt":
+                return [ requestPrefix + "getStorageAt", [ getLowerCase(params.address), params.position, params.blockTag ] ];
+            
+            ///
+            case "getDelegationsByDelegator": {
+                return [ requestPrefix + "getDelegationsByDelegator",  [ getLowerCase(params.delegator)]];
+            }   
+            
+            case "getDelegationsByDelegatorByBlockNumber": {
+                return [ requestPrefix + "getDelegationsByDelegatorByBlockNumber",  [ getLowerCase(params.delegator), params.blockNumber]];
+            }     
+
+            case "getDelegationsByValidator": {
+                return [ requestPrefix + "getDelegationsByValidator",  [ getLowerCase(params.validator) ]];
+            }   
+            
+            ///
+            case "getAllValidatorAddresses": {
+                return [ requestPrefix + "getAllValidatorAddresses",  []];
+            }    
+            
+            case "getAllValidatorInformation": {
+                return [ requestPrefix + "getAllValidatorInformation",  [ params.pageIndex ]];
+            }   
+
+            case "getAllValidatorInformationByBlockNumber": {
+                return [ requestPrefix + "getAllValidatorInformationByBlockNumber",  [ params.pageIndex , params.blockNumber]];
+            }  
+            
+            case "getElectedValidatorAddresses": {
+                return [ requestPrefix + "getElectedValidatorAddresses",  []];
+            }   
+
+            case "getValidatorInformation": {
+                return [ requestPrefix + "getValidatorInformation",  [ getLowerCase(params.validator) ]];
+            }   
+
+            ///
+            case "getCurrentUtilityMetrics": {
+                return [ requestPrefix + "getCurrentUtilityMetrics",  []];
+            }  
+
+            case "getMedianRawStakeSnapshot": {
+                return [ requestPrefix + "getMedianRawStakeSnapshot",  []];
+            }  
+
+            case "getStakingNetworkInfo": {
+                return [ requestPrefix + "getStakingNetworkInfo",  []];
+            }  
+
+            case "getSuperCommittees": {
+                return [ requestPrefix + "getSuperCommittees",  []];
+            }
+
+            ///
+            case "getCXReceiptByHash": {
+                return [ requestPrefix + "getCXReceiptByHash",  [ getLowerCase(params.cxHash) ]];
+            }
+
+            case "getPendingCXReceipts": {
+                return [ requestPrefix + "getPendingCXReceipts",  []];
+            }
+
+            case "resendCx": {
+                return [ requestPrefix + "resendCx",  [ getLowerCase(params.cxHash) ]];
+            }
+
+            ///
+            case "getPoolStats": {
+                return [ requestPrefix + "getPoolStats",  []];
+            }
+
+            case "getPendingStakingTransaction": {
+                return [ requestPrefix + "pendingStakingTransaction",  []];
+            }
+
+            case "getPendingTransactions": {
+                return [ requestPrefix + "pendingTransactions",  []];
+            }
+
+            ///
+            case "getCurrentStakingErrorSink": {
+                return [ requestPrefix + "getCurrentStakingErrorSink",  []];
+            }
+
+            case "getStakingTransactionByBlockNumberAndIndex": {
+                return [ requestPrefix + "getStakingTransactionByBlockNumberAndIndex",  [ params.blockNumber, params.stakingTransactionIndex]];
+            }
+
+            case "getStakingTransactionByBlockHashAndIndex": {
+                return [ requestPrefix + "getStakingTransactionByBlockHashAndIndex",  [ getLowerCase(params.blockHash), params.stakingTransactionIndex]];
+            }
+
+            case "getStakingTransactionByHash": {
+                return [ requestPrefix + "getStakingTransactionByHash",  [ getLowerCase(params.txHash) ]];
+            }
+
+            case "sendRawStakingTransaction": {
+                return [ requestPrefix + "sendRawStakingTransaction",  [ params.signedTransaction ]];
+            }
+
+            ///
+            case "getCurrentTransactionErrorSink": {
+                return [ requestPrefix + "getCurrentTransactionErrorSink",  []];
+            }
+
+            case "getTransactionByBlockNumberAndIndex": {
+                return [ requestPrefix + "getTransactionByBlockNumberAndIndex",  [ params.blockNumber, params.transactionIndex ]];
+            }
+
+            case "getTransactionByBlockHashAndIndex": {
+                return [ requestPrefix + "getTransactionByBlockHashAndIndex",  [ getLowerCase(params.blockHash), params.transactionIndex ]];
+            }
+
+            case "getTransactionByHash": {
+                return [ requestPrefix + "getTransactionByHash",  [ getLowerCase(params.txHash) ]];
+            }
+
+            case "getTransactionReceipt":
+                return [ requestPrefix + "getTransactionReceipt", [ params.transactionHash ] ];
+
+            case "sendRawTransaction": {
+                return [ requestPrefix + "sendRawTransaction",  [ params.signedTransaction ]];
+            }
+
+            //
+            ///
+            case "getBlockNumber": {
+                return [ requestPrefix + "blockNumber",  []];
+            }
+
+            case "getCirculatingSupply": {
+                return [ requestPrefix + "getCirculatingSupply",  []];
+            }
+
+            case "getEpoch": {
+                return [ requestPrefix + "getEpoch",  []];
+            }
+
+            case "getLastCrossLinks": {
+                return [ requestPrefix + "getLastCrossLinks",  []];
+            }
+
+            case "getLeader": {
+                return [ requestPrefix + "getLeader",  []];
+            }
+
+            case "getGasPrice": {
+                return [ requestPrefix + "gasPrice",  []];
+            }
+
+            case "getShardingStructure": {
+                return [ requestPrefix + "getShardingStructure",  []];
+            }
+
+            case "getTotalSupply": {
+                return [ requestPrefix + "getTotalSupply",  []];
+            }
+
+            case "getValidators": {
+                return [ requestPrefix + "getValidators",  [ params.epochNumber ]];
+            }
+
+            case "getValidatorKeys": {
+                return [ requestPrefix + "getValidatorKeys",  [ params.epochNumber ]];
+            }
+
+            ///
+            case "getCurrentBadBlocks": {
+                return [ requestPrefix + "getCurrentBadBlocks",  []];
+            }
+
+            case "getNodeMetadata": {
+                return [ requestPrefix + "getNodeMetadata",  []];
+            }
+
+            case "getProtocolVersion": {
+                return [ requestPrefix + "protocolVersion",  []];
+            }
+
+            case "getPeerCount": {
+                return [ requestPrefix + "peerCount",  []];
+            }
+
+            ///
+            case "getBlocks": {
+                return [ requestPrefix + "getBlocks",  [ params.startingBlock, params.endingBlock, params.extra ]];
+            }
+
+            case "getBlockByNumber": {
+                return [ requestPrefix + "getBlockByNumber",  [ params.blockNumber, params.extra ]];
+            }
+            
+            case "getBlockByHash": {
+                return [ requestPrefix + "getBlockByHash",  [ getLowerCase(params.blockHash), params.extra]];
+            }
+
+            case "getBlockSigners": {
+                return [ requestPrefix + "getBlockSigners",  [ params.startingBlock, params.endingBlock, params.extra ]];
+            }
+
+            case "getBlockSignersKeys": {
+                return [ requestPrefix + "getBlockSignersKeys",  [ params.blockNumber ]];
+            }
+
+            case "getBlockTransactionCountByNumber": {
+                return [ requestPrefix + "getBlockTransactionCountByNumber",  [ params.blockNumber ]];
+            }
+
+
+            case "getBlockTransactionCountByHash": {
+                return [ requestPrefix + "getBlockTransactionCountByHash",  [ getLowerCase(params.blockHash) ]];
+            }
+
+            case "getHeaderByNumber": {
+                return [ requestPrefix + "getHeaderByNumber",  [ params.blockNumber ]];
+            }
+
+            case "getLatestChainHeaders": {
+                return [ requestPrefix + "getLatestChainHeaders",  []];
+            }
+
+            case "getLatestHeaders": {
+                return [ requestPrefix + "latestHeader",  []];
+            }
+
+            //
+            case "getBalance":
+                return [ requestPrefix + "getBalance", [ getLowerCase(params.address) ] ];
+
+            case "getBalanceByBlockNumber":
+                return [ requestPrefix + "getBalanceByBlockNumber", [ getLowerCase(params.address), params.blockTag ] ];
+
+            case "getStakingTransactionsCount":
+                return [ requestPrefix + "getStakingTransactionsCount", [ getLowerCase(params.address), params.transactionType ] ];
+     
+            case "getStakingTransactionsHistory":
+                return [ requestPrefix + "getStakingTransactionsHistory", [ {
+                    address: getLowerCase(params.address),
+                    pageIndex: params.pageIndex,
+                    pageSize: params.pageSize,
+                    fullTx: params.fullTx,
+                    txType: params.txType,
+                    order: params.order,
+                } ] ];
+
+            case "getTransactionsCount":
+                return [ requestPrefix + "getTransactionsCount", [ getLowerCase(params.address), params.transactionType ] ];
+        
+            case "getTransactionsHistory":
+                return [ requestPrefix + "getTransactionsHistory", [ {
+                    address: getLowerCase(params.address),
+                    pageIndex: params.pageIndex,
+                    pageSize: params.pageSize,
+                    fullTx: params.fullTx,
+                    txType: params.txType,
+                    order: params.order,
+                } ] ];
+            ///
+            case "xxxxxx": {
+                return [ requestPrefix + "xxxxxx",  []];
+            }
             default:
                 break;
         }
@@ -1181,10 +1459,10 @@ export class HarmonyRpcProvider extends BaseProvider {
         return this.perform("getPendingCXReceipts", params); 
     }
 
-    async resendCx(cxReceiptHash: string): Promise<boolean> {
+    async resendCx(cxHash: string): Promise<boolean> {
         await this.getNetwork();
         const params = {
-            cxReceiptHash: cxReceiptHash
+            cxHash: cxHash
         };
 
         return this.perform("resendCx", params); 
@@ -1240,10 +1518,10 @@ export class HarmonyRpcProvider extends BaseProvider {
         return this.perform("getStakingTransactionByBlockHashAndIndex", params); 
     }
 
-    async getStakingTransactionByHash(blockHash: string): Promise<StakingTransaction> {
+    async getStakingTransactionByHash(txHash: string): Promise<StakingTransaction> {
         await this.getNetwork();
         const params = {
-            blockHash: blockHash,
+            txHash: txHash,
         };
 
         return this.perform("getStakingTransactionByHash", params); 
@@ -1291,10 +1569,10 @@ export class HarmonyRpcProvider extends BaseProvider {
         return this.perform("getTransactionByBlockHashAndIndex", params); 
     }
 
-    async getTransactionByHash(blockHash: string): Promise<Transaction> {
+    async getTransactionByHash(txHash: string): Promise<Transaction> {
         await this.getNetwork();
         const params = {
-            blockHash: blockHash,
+            txHash: txHash,
         };
 
         return this.perform("getTransactionByHash", params); 
@@ -1351,4 +1629,191 @@ export class HarmonyRpcProvider extends BaseProvider {
             throw error;
         }
     }
+}
+
+
+
+type ValidatorInformation = {
+    //TODO
+}
+
+type RawStaleSnapshot= {
+    //TODO
+}
+type SuperCommittee = {
+    //TODO
+}
+
+type TransactionType = "SENT" | "RECEIVED" | "ALL";
+type OrderType = "ASC" | "DESC" ;
+type StakingTransaction = {
+    blockHash: string | null;
+    blockNumber: number | null;
+    from: string;
+    timestamp: number;
+    gasPrice: number;
+    gas: number;
+    hash: string;
+    nonce: number;
+    transactionIndex: number | null;
+    type: string;
+    msg: any;
+    v?: number;
+}
+type Transaction = {
+    blockHash: string | null;
+    blockNumber: number | null;
+    from: string;
+    timestamp: number;
+    gasPrice: number;
+    gas: number;
+    hash: string;
+    input: string;
+    nonce: number;
+    to: string;
+    transactionIndex: number | null;
+    value: number;
+    shardID: number;
+    toShardID: number;
+    v?: number;
+}
+type CrossLink = {
+    hash: string;
+    'block-number': number; //ALERT HARMONY
+    'view-id': number;
+    signature: string;
+    'signature-bitmap': string;
+    'shard-id': number;
+    'epoch-number': number;
+}
+type ShardingStructure = {
+    current: boolean;
+    http: string;
+    shardID: number;
+    ws: string;
+}
+type Validator = {
+    address: string;
+    balance: number;
+}
+type ValidatorsObject = {
+    shardID: number;
+    validators: Validator[];
+}
+
+type TransactionError = {
+    'tx-hash-id': string;
+    'time-at-rejection': number;
+    'error-message': string;
+}
+type StakingError = {
+    'tx-hash-id': string;
+    'directive-kind': string;
+    'time-at-rejection': number;
+    'error-message': string;
+}
+type PoolStat = {
+    'executable-count': string;
+    'non-executable-count': string;
+}
+type PendingCXReceipt = {
+    receipts: CXReceipt[];
+    merkleProof: any; //TODO
+    header: any; //TODO
+    commitSig: string;
+    commitBitmap: string;
+}
+type CXReceipt = {
+    blockHash: string;
+    blockNumber: number;
+    hash: string;
+    from: string;
+    to: string;
+    shardID: number;
+    toShardID: number;
+    value: number;
+}
+type StakingNetworkInfo = {
+    'total-supply': string;
+    'circulating-supply': string;
+    'epoch-last-block': number;
+    'total-staking': number;
+    'median-raw-stake': string;
+}
+type UtilityMetric = {
+    AccumulatorSnapshop: number;
+    CurrentStakedPercentage: string;
+    Deviation: string;
+    Adjustment: string;
+}
+type Delegation = {
+    validator_address: string;
+    delegator_address: string;
+    amount: number;
+    reward: number;
+    Undelegations: any[];
+}
+
+type BlockHeader = {
+    blockHash: string;
+    blockNumber: number;
+    shardID: number;
+    leader: string;
+    viewID: number;
+    epoch: number;
+    timestamp: string;
+    unixtime: number;
+    lastCommitSig: string;
+    lastCommitBitmap: string;
+}
+type BeaconChainHeader = {
+    'shard-id': number;
+    'block-header-hash': string;
+    'block-number': number;
+    'view-id': number;
+    epoch: number;
+}
+type ShardChainHeader = {
+    'shard-id': number;
+    'block-header-hash': string;
+    'block-number': number;
+    'view-id': number;
+    epoch: number;
+}
+type ChainHeader = {
+    'beacon-chain-header': BeaconChainHeader;
+    'shard-chain-header': ShardChainHeader;
+}
+type NodeMetadata = {
+    blskey: string[];
+    version: string;
+    network: string;
+    'chain-config': ChainConfig;
+    'is-leader': boolean;
+    'shard-id': number;
+    'current-epoch': number;
+    'block-per-epoch': number;
+    role: string;
+    'dns-zone': string;
+    'is-archival': boolean;
+    'node-unix-start-time': number;
+    'p2p-connectivity': P2PConnectivity;
+}
+
+type ChainConfig = {
+    'chain-id': number;
+    'cross-tx-epoch': number;
+    'cross-link-epoch': number;
+    'staking-epoch': number;
+    'prestaking-epoch': number;
+    'quick-unlock-epoch': number;
+    'eip155-epoch': number;
+    's3-epoch': number;
+    'receipt-log-epoch': number;
+}
+
+type P2PConnectivity = {
+    'total-known-peers': number;
+    connected: number;
+    'not-connected': number;
 }

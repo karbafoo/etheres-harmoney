@@ -3,7 +3,7 @@ type ValidatorInformation = {
     //TODO
 }
 
-type RawStaleSnapshot ={
+type RawStaleSnapshot= {
     //TODO
 }
 type SuperCommittee = {

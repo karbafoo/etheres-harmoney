@@ -19,7 +19,7 @@ import { accessListify } from '@ethersproject/transactions';
 import { fetchJson, poll } from '@ethersproject/web';
 import { BaseProvider } from '..';
 import { version } from '../_version';
-import { testnet, localnet } from './HARMONY_ENDPOINTS';
+import { testnet, localnet } from './harmony-rcp-api';
 const logger = new Logger(version);
 const errorGas = ["call", "estimateGas"];
 const requestPrefix = "hmyv2_";
@@ -126,7 +126,7 @@ export class HarmonyRpcSigner extends Signer {
         if (this._address) {
             return Promise.resolve(this._address);
         }
-        return this.provider.send(requestPrefix + "ccounts", []).then((accounts) => {
+        return this.provider.send(requestPrefix + "accounts", []).then((accounts) => {
             if (accounts.length <= this._index) {
                 logger.throwError("unknown account #" + this._index, Logger.errors.UNSUPPORTED_OPERATION, {
                     operation: "getAddress"
@@ -161,10 +161,10 @@ export class HarmonyRpcSigner extends Signer {
                 tx.from = sender;
             }
             const hexTx = this.provider.constructor.hexlifyTransaction(tx, { from: true });
-            return this.provider.send(requestPrefix + "sendTransaction", [hexTx]).then((hash) => {
+            return this.provider.send(requestPrefix + "sendRawTransaction", [hexTx]).then((hash) => {
                 return hash;
             }, (error) => {
-                return checkError("sendTransaction", error, hexTx);
+                return checkError("sendRawTransaction", error, hexTx);
             });
         });
     }
@@ -366,7 +366,6 @@ export class HarmonyRpcProvider extends BaseProvider {
             request: deepCopy(request),
             provider: this
         });
-        console.log('this.connetion', this.connection);
         return fetchJson(this.connection, JSON.stringify(request), getResult).then((result) => {
             this.emit("debug", {
                 action: "response",
@@ -387,47 +386,261 @@ export class HarmonyRpcProvider extends BaseProvider {
     }
     prepareRequest(method, params) {
         switch (method) {
-            case "getBlockNumberOld":
-                return ["eth_blockNumber", []];
-            case "getBlockNumber":
-                return [requestPrefix + "blockNumber", []];
-            case "getGasPrice":
-                return [requestPrefix + "gasPrice", []];
-            case "getBalance":
-                return [requestPrefix + "getBalance", [getLowerCase(params.address)]];
-            case "getTransactionCount":
-                return [requestPrefix + "getTransactionCount", [getLowerCase(params.address), params.blockTag]];
-            case "getCode":
-                return [requestPrefix + "getCode", [getLowerCase(params.address), params.blockTag]];
-            case "getStorageAt":
-                return [requestPrefix + "getStorageAt", [getLowerCase(params.address), params.position, params.blockTag]];
-            case "sendTransaction":
-                return [requestPrefix + "sendRawTransaction", [params.signedTransaction]];
-            case "getBlock":
-                if (params.blockTag) {
-                    return [requestPrefix + "getBlockByNumber", [params.blockTag, !!params.includeTransactions]];
+            // case "getBlockNumber":
+            //     return [ requestPrefix + "blockNumber", [] ];
+            // case "getGasPrice":
+            //     return [ requestPrefix + "gasPrice", [] ];
+            // case "getBalance":
+            //     return [ requestPrefix + "getBalance", [ getLowerCase(params.address) ] ];
+            // case "getTransactionCount":
+            //     return [ requestPrefix + "getTransactionCount", [ getLowerCase(params.address), params.blockTag ] ];
+            // case "getCode":
+            //     return [ requestPrefix + "getCode", [ getLowerCase(params.address), params.blockTag ] ];
+            // case "getStorageAt":
+            //     return [ requestPrefix + "getStorageAt", [ getLowerCase(params.address), params.position, params.blockTag ] ];
+            // case "sendRawTransaction":
+            //     return [ requestPrefix + "sendRawTransaction", [ params.signedTransaction ] ]
+            // case "getBlock":
+            //     if (params.blockTag) {
+            //         return [ requestPrefix + "getBlockByNumber", [ params.blockTag, !!params.includeTransactions ] ];
+            //     } else if (params.blockHash) {
+            //         return [ requestPrefix + "getBlockByHash", [ params.blockHash, !!params.includeTransactions ] ];
+            //     }
+            //     return null;
+            // case "getTransaction":
+            //     return [ requestPrefix + "getTransactionByHash", [ params.transactionHash ] ];
+            // case "getTransactionReceipt":
+            //     return [ requestPrefix + "getTransactionReceipt", [ params.transactionHash ] ];
+            // case "call": {
+            //     const hexlifyTransaction = getStatic<(t: TransactionRequest, a?: { [key: string]: boolean }) => { [key: string]: string }>(this.constructor, "hexlifyTransaction");
+            //     return [ requestPrefix + "call", [ hexlifyTransaction(params.transaction, { from: true }), params.blockTag ] ];
+            // }
+            // case "estimateGas": {
+            //     const hexlifyTransaction = getStatic<(t: TransactionRequest, a?: { [key: string]: boolean }) => { [key: string]: string }>(this.constructor, "hexlifyTransaction");
+            //     return [ requestPrefix + "estimateGas", [ hexlifyTransaction(params.transaction, { from: true }) ] ];
+            // }
+            case "getLogs":
+                if (params.filter && params.filter.address != null) {
+                    params.filter.address = getLowerCase(params.filter.address);
                 }
-                else if (params.blockHash) {
-                    return [requestPrefix + "getBlockByHash", [params.blockHash, !!params.includeTransactions]];
-                }
-                return null;
-            case "getTransaction":
-                return [requestPrefix + "getTransactionByHash", [params.transactionHash]];
-            case "getTransactionReceipt":
-                return [requestPrefix + "getTransactionReceipt", [params.transactionHash]];
+                return ["eth_getLogs", [params.filter]];
+            default:
+                break;
+        }
+        switch (method) {
             case "call": {
                 const hexlifyTransaction = getStatic(this.constructor, "hexlifyTransaction");
                 return [requestPrefix + "call", [hexlifyTransaction(params.transaction, { from: true }), params.blockTag]];
             }
             case "estimateGas": {
                 const hexlifyTransaction = getStatic(this.constructor, "hexlifyTransaction");
-                return [requestPrefix + "estimateGas", [hexlifyTransaction(params.transaction, { from: true })]];
+                return [requestPrefix + "estimateGas", [hexlifyTransaction(params.transaction, { from: true }), params.blockTag]];
             }
-            case "getLogs":
-                if (params.filter && params.filter.address != null) {
-                    params.filter.address = getLowerCase(params.filter.address);
-                }
-                return [requestPrefix + "getLogs", [params.filter]];
+            case "getCode": {
+                return [requestPrefix + "getCode", [getLowerCase(params.address), params.blockTag]];
+            }
+            case "getStorageAt":
+                return [requestPrefix + "getStorageAt", [getLowerCase(params.address), params.position, params.blockTag]];
+            ///
+            case "getDelegationsByDelegator": {
+                return [requestPrefix + "getDelegationsByDelegator", [getLowerCase(params.delegator)]];
+            }
+            case "getDelegationsByDelegatorByBlockNumber": {
+                return [requestPrefix + "getDelegationsByDelegatorByBlockNumber", [getLowerCase(params.delegator), params.blockNumber]];
+            }
+            case "getDelegationsByValidator": {
+                return [requestPrefix + "getDelegationsByValidator", [getLowerCase(params.validator)]];
+            }
+            ///
+            case "getAllValidatorAddresses": {
+                return [requestPrefix + "getAllValidatorAddresses", []];
+            }
+            case "getAllValidatorInformation": {
+                return [requestPrefix + "getAllValidatorInformation", [params.pageIndex]];
+            }
+            case "getAllValidatorInformationByBlockNumber": {
+                return [requestPrefix + "getAllValidatorInformationByBlockNumber", [params.pageIndex, params.blockNumber]];
+            }
+            case "getElectedValidatorAddresses": {
+                return [requestPrefix + "getElectedValidatorAddresses", []];
+            }
+            case "getValidatorInformation": {
+                return [requestPrefix + "getValidatorInformation", [getLowerCase(params.validator)]];
+            }
+            ///
+            case "getCurrentUtilityMetrics": {
+                return [requestPrefix + "getCurrentUtilityMetrics", []];
+            }
+            case "getMedianRawStakeSnapshot": {
+                return [requestPrefix + "getMedianRawStakeSnapshot", []];
+            }
+            case "getStakingNetworkInfo": {
+                return [requestPrefix + "getStakingNetworkInfo", []];
+            }
+            case "getSuperCommittees": {
+                return [requestPrefix + "getSuperCommittees", []];
+            }
+            ///
+            case "getCXReceiptByHash": {
+                return [requestPrefix + "getCXReceiptByHash", [getLowerCase(params.cxHash)]];
+            }
+            case "getPendingCXReceipts": {
+                return [requestPrefix + "getPendingCXReceipts", []];
+            }
+            case "resendCx": {
+                return [requestPrefix + "resendCx", [getLowerCase(params.cxHash)]];
+            }
+            ///
+            case "getPoolStats": {
+                return [requestPrefix + "getPoolStats", []];
+            }
+            case "getPendingStakingTransaction": {
+                return [requestPrefix + "pendingStakingTransaction", []];
+            }
+            case "getPendingTransactions": {
+                return [requestPrefix + "pendingTransactions", []];
+            }
+            ///
+            case "getCurrentStakingErrorSink": {
+                return [requestPrefix + "getCurrentStakingErrorSink", []];
+            }
+            case "getStakingTransactionByBlockNumberAndIndex": {
+                return [requestPrefix + "getStakingTransactionByBlockNumberAndIndex", [params.blockNumber, params.stakingTransactionIndex]];
+            }
+            case "getStakingTransactionByBlockHashAndIndex": {
+                return [requestPrefix + "getStakingTransactionByBlockHashAndIndex", [getLowerCase(params.blockHash), params.stakingTransactionIndex]];
+            }
+            case "getStakingTransactionByHash": {
+                return [requestPrefix + "getStakingTransactionByHash", [getLowerCase(params.txHash)]];
+            }
+            case "sendRawStakingTransaction": {
+                return [requestPrefix + "sendRawStakingTransaction", [params.signedTransaction]];
+            }
+            ///
+            case "getCurrentTransactionErrorSink": {
+                return [requestPrefix + "getCurrentTransactionErrorSink", []];
+            }
+            case "getTransactionByBlockNumberAndIndex": {
+                return [requestPrefix + "getTransactionByBlockNumberAndIndex", [params.blockNumber, params.transactionIndex]];
+            }
+            case "getTransactionByBlockHashAndIndex": {
+                return [requestPrefix + "getTransactionByBlockHashAndIndex", [getLowerCase(params.blockHash), params.transactionIndex]];
+            }
+            case "getTransactionByHash": {
+                return [requestPrefix + "getTransactionByHash", [getLowerCase(params.txHash)]];
+            }
+            case "getTransactionReceipt":
+                return [requestPrefix + "getTransactionReceipt", [params.transactionHash]];
+            case "sendRawTransaction": {
+                return [requestPrefix + "sendRawTransaction", [params.signedTransaction]];
+            }
+            //
+            ///
+            case "getBlockNumber": {
+                return [requestPrefix + "blockNumber", []];
+            }
+            case "getCirculatingSupply": {
+                return [requestPrefix + "getCirculatingSupply", []];
+            }
+            case "getEpoch": {
+                return [requestPrefix + "getEpoch", []];
+            }
+            case "getLastCrossLinks": {
+                return [requestPrefix + "getLastCrossLinks", []];
+            }
+            case "getLeader": {
+                return [requestPrefix + "getLeader", []];
+            }
+            case "getGasPrice": {
+                return [requestPrefix + "gasPrice", []];
+            }
+            case "getShardingStructure": {
+                return [requestPrefix + "getShardingStructure", []];
+            }
+            case "getTotalSupply": {
+                return [requestPrefix + "getTotalSupply", []];
+            }
+            case "getValidators": {
+                return [requestPrefix + "getValidators", [params.epochNumber]];
+            }
+            case "getValidatorKeys": {
+                return [requestPrefix + "getValidatorKeys", [params.epochNumber]];
+            }
+            ///
+            case "getCurrentBadBlocks": {
+                return [requestPrefix + "getCurrentBadBlocks", []];
+            }
+            case "getNodeMetadata": {
+                return [requestPrefix + "getNodeMetadata", []];
+            }
+            case "getProtocolVersion": {
+                return [requestPrefix + "protocolVersion", []];
+            }
+            case "getPeerCount": {
+                return [requestPrefix + "peerCount", []];
+            }
+            ///
+            case "getBlocks": {
+                return [requestPrefix + "getBlocks", [params.startingBlock, params.endingBlock, params.extra]];
+            }
+            case "getBlockByNumber": {
+                return [requestPrefix + "getBlockByNumber", [params.blockNumber, params.extra]];
+            }
+            case "getBlockByHash": {
+                return [requestPrefix + "getBlockByHash", [getLowerCase(params.blockHash), params.extra]];
+            }
+            case "getBlockSigners": {
+                return [requestPrefix + "getBlockSigners", [params.startingBlock, params.endingBlock, params.extra]];
+            }
+            case "getBlockSignersKeys": {
+                return [requestPrefix + "getBlockSignersKeys", [params.blockNumber]];
+            }
+            case "getBlockTransactionCountByNumber": {
+                return [requestPrefix + "getBlockTransactionCountByNumber", [params.blockNumber]];
+            }
+            case "getBlockTransactionCountByHash": {
+                return [requestPrefix + "getBlockTransactionCountByHash", [getLowerCase(params.blockHash)]];
+            }
+            case "getHeaderByNumber": {
+                return [requestPrefix + "getHeaderByNumber", [params.blockNumber]];
+            }
+            case "getLatestChainHeaders": {
+                return [requestPrefix + "getLatestChainHeaders", []];
+            }
+            case "getLatestHeaders": {
+                return [requestPrefix + "latestHeader", []];
+            }
+            //
+            case "getBalance":
+                return [requestPrefix + "getBalance", [getLowerCase(params.address)]];
+            case "getBalanceByBlockNumber":
+                return [requestPrefix + "getBalanceByBlockNumber", [getLowerCase(params.address), params.blockTag]];
+            case "getStakingTransactionsCount":
+                return [requestPrefix + "getStakingTransactionsCount", [getLowerCase(params.address), params.transactionType]];
+            case "getStakingTransactionsHistory":
+                return [requestPrefix + "getStakingTransactionsHistory", [{
+                            address: getLowerCase(params.address),
+                            pageIndex: params.pageIndex,
+                            pageSize: params.pageSize,
+                            fullTx: params.fullTx,
+                            txType: params.txType,
+                            order: params.order,
+                        }]];
+            case "getTransactionsCount":
+                return [requestPrefix + "getTransactionsCount", [getLowerCase(params.address), params.transactionType]];
+            case "getTransactionsHistory":
+                return [requestPrefix + "getTransactionsHistory", [{
+                            address: getLowerCase(params.address),
+                            pageIndex: params.pageIndex,
+                            pageSize: params.pageSize,
+                            fullTx: params.fullTx,
+                            txType: params.txType,
+                            order: params.order,
+                        }]];
+            ///
+            case "xxxxxx": {
+                return [requestPrefix + "xxxxxx", []];
+            }
             default:
                 break;
         }
@@ -542,15 +755,357 @@ export class HarmonyRpcProvider extends BaseProvider {
         }
         return result;
     }
-    getBalance(addressOrName, blockTag) {
+    // Smart Contract
+    //ALERT HARMONY <TransactionRequest>
+    call(transaction, blockTag) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                transaction: this._getTransactionRequest(transaction),
+                blockTag: this._getBlockTag(blockTag)
+            });
+            const result = yield this.perform("call", params);
+            try {
+                return hexlify(result);
+            }
+            catch (error) {
+                return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                    method: "call",
+                    params, result, error
+                });
+            }
+        });
+    }
+    estimateGas(transaction) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                transaction: this._getTransactionRequest(transaction)
+            });
+            const result = yield this.perform("estimateGas", params);
+            try {
+                return BigNumber.from(result);
+            }
+            catch (error) {
+                return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                    method: "estimateGas",
+                    params, result, error
+                });
+            }
+        });
+    }
+    getCode(addressOrName, blockTag) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.getNetwork();
             const params = yield resolveProperties({
                 address: this._getAddress(addressOrName),
                 blockTag: this._getBlockTag(blockTag)
             });
+            const result = yield this.perform("getCode", params);
+            try {
+                return hexlify(result);
+            }
+            catch (error) {
+                return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                    method: "getCode",
+                    params, result, error
+                });
+            }
+        });
+    }
+    getStorageAt(addressOrName, position, blockTag) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                address: this._getAddress(addressOrName),
+                position: Promise.resolve(position).then((p) => hexValue(p)),
+                blockTag: this._getBlockTag(blockTag)
+            });
+            const result = yield this.perform("getStorageAt", params);
+            try {
+                return hexlify(result);
+            }
+            catch (error) {
+                return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                    method: "getStorageAt",
+                    params, result, error
+                });
+            }
+        });
+    }
+    // Blockchain
+    //Network
+    getBlockNumber() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const params = {};
+            const result = yield this.perform("getBlockNumber", params);
+            try {
+                return BigNumber.from(result).toNumber();
+            }
+            catch (error) {
+                return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                    method: "getBlockNumber",
+                    params, result, error
+                });
+            }
+        });
+    }
+    getCirculatingSupply() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const params = {};
+            const result = yield this.perform("getCirculatingSupply", params);
+            try {
+                return BigNumber.from(result).toNumber();
+            }
+            catch (error) {
+                return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                    method: "getCirculatingSupply",
+                    params, result, error
+                });
+            }
+        });
+    }
+    getEpoch() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const params = {};
+            const result = yield this.perform("getEpoch", params);
+            try {
+                return BigNumber.from(result).toNumber();
+            }
+            catch (error) {
+                return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                    method: "getEpoch",
+                    params, result, error
+                });
+            }
+        });
+    }
+    getLastCrossLinks() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const params = {};
+            return this.perform("getLastCrossLinks", params);
+        });
+    }
+    getLeader() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const params = {};
+            return this.perform("getLeader", params);
+        });
+    }
+    getGasPrice() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const params = {};
+            const result = yield this.perform("getGasPrice", params);
+            try {
+                return BigNumber.from(result);
+            }
+            catch (error) {
+                return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                    method: "getGasPrice",
+                    params, result, error
+                });
+            }
+        });
+    }
+    getShardingStructure() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const params = {};
+            return this.perform("getShardingStructure", params);
+        });
+    }
+    getTotalSupply() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const params = {};
+            const result = yield this.perform("getTotalSupply", params);
+            try {
+                return BigNumber.from(result);
+            }
+            catch (error) {
+                return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                    method: "getTotalSupply",
+                    params, result, error
+                });
+            }
+        });
+    }
+    getValidators(epochNumber) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const params = yield resolveProperties({
+                epochNumber: epochNumber,
+            });
+            return this.perform("getValidators", params);
+        });
+    }
+    getValidatorKeys(epochNumber) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const params = yield resolveProperties({
+                epochNumber: epochNumber,
+            });
+            return this.perform("getValidatorKeys", params);
+        });
+    }
+    //Node
+    getCurrentBadBlocks() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const params = {};
+            return this.perform("getCurrentBadBlocks", params);
+        });
+    }
+    getNodeMetadata() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const params = {};
+            return this.perform("getNodeMetadata", params);
+        });
+    }
+    getProtocolVersion() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const params = {};
+            const result = yield this.perform("getProtocolVersion", params);
+            try {
+                return BigNumber.from(result).toNumber();
+            }
+            catch (error) {
+                return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                    method: "getProtocolVersion",
+                    params, result, error
+                });
+            }
+        });
+    }
+    getPeerCount() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const params = {};
+            return this.perform("getPeerCount", params);
+        });
+    }
+    //Blocks
+    getBlocks(startingBlock, endingBlock, extra) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                startingBlock: startingBlock,
+                endingBlock: endingBlock,
+                extra: extra,
+            });
+            return this.perform("getBlocks", params);
+        });
+    }
+    getBlockByNumber(blockNumber, extra) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                blockNumber: blockNumber,
+                extra: extra,
+            });
+            return this.perform("getBlockByNumber", params);
+        });
+    }
+    getBlockByHash(blockHash, extra) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                blockHash: blockHash,
+                extra: extra,
+            });
+            return this.perform("getBlockByHash", params);
+        });
+    }
+    getBlockSigners(startingBlock, endingBlock, extra) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                startingBlock: startingBlock,
+                endingBlock: endingBlock,
+                extra: extra,
+            });
+            return this.perform("getBlockSigners", params);
+        });
+    }
+    getBlockSignersKeys(blockNumber) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                blockNumber: blockNumber,
+            });
+            return this.perform("getBlockSignersKeys", params);
+        });
+    }
+    getBlockTransactionCountByNumber(blockNumber) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                blockNumber: blockNumber,
+            });
+            const result = this.perform("getBlockTransactionCountByNumber", params);
+            try {
+                return BigNumber.from(result).toNumber();
+            }
+            catch (error) {
+                return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                    method: "getBlockTransactionCountByNumber",
+                    params, result, error
+                });
+            }
+        });
+    }
+    getBlockTransactionCountByHash(blockHash) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                blockHash: blockHash,
+            });
+            const result = yield this.perform("getBlockTransactionCountByHash", params);
+            try {
+                return BigNumber.from(result).toNumber();
+            }
+            catch (error) {
+                return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                    method: "getBlockTransactionCountByHash",
+                    params, result, error
+                });
+            }
+        });
+    }
+    getHeaderByNumber(blockNumber) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                blockNumber: blockNumber,
+            });
+            return this.perform("getHeaderByNumber", params);
+        });
+    }
+    getLatestChainHeaders(blockNumber) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {};
+            return this.perform("getLatestChainHeaders", params);
+        });
+    }
+    getLatestHeader(blockNumber) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {};
+            const result = yield this.perform("getLatestHeader", params);
+            try {
+                return result;
+            }
+            catch (error) {
+                return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                    method: "getLatestHeader",
+                    params, result, error
+                });
+            }
+        });
+    }
+    // Account
+    getBalance(addressOrName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                address: this._getAddress(addressOrName)
+            });
             const result = yield this.perform("getBalance", params);
-            console.log('getbalance', BigInt(result));
             try {
                 return BigNumber.from(BigInt(result));
             }
@@ -559,6 +1114,399 @@ export class HarmonyRpcProvider extends BaseProvider {
                     method: "getBalance",
                     params, result, error
                 });
+            }
+        });
+    }
+    getBalanceByBlockNumber(addressOrName, blockTag) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                address: this._getAddress(addressOrName),
+                blockTag: this._getBlockTag(blockTag)
+            });
+            const result = yield this.perform("getBalanceByBlockNumber", params);
+            try {
+                return BigNumber.from(BigInt(result));
+            }
+            catch (error) {
+                return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                    method: "getBalanceByBlockNumber",
+                    params, result, error
+                });
+            }
+        });
+    }
+    getStakingTransactionsCount(addressOrName, transactionType) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                address: this._getAddress(addressOrName),
+                transactionType: transactionType
+            });
+            const result = yield this.perform("getStakingTransactionsCount", params);
+            try {
+                return BigNumber.from(BigInt(result)).toNumber();
+            }
+            catch (error) {
+                return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                    method: "getStakingTransactionsCount",
+                    params, result, error
+                });
+            }
+        });
+    }
+    getStakingTransactionsHistory(addressOrName, pageIndex, pageSize, fullTx, txType, order) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                address: this._getAddress(addressOrName),
+                pageIndex: pageIndex,
+                pageSize: pageSize,
+                fullTx: fullTx,
+                txType: txType,
+                order: order,
+            });
+            return this.perform("getStakingTransactionsHistory", params);
+        });
+    }
+    getTransactionsCount(addressOrName, transactionType) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                address: this._getAddress(addressOrName),
+                transactionType: transactionType
+            });
+            const result = yield this.perform("getTransactionsCount", params); //ALERT HARMONY getTransactionsCount
+            try {
+                return BigNumber.from(BigInt(result)).toNumber();
+            }
+            catch (error) {
+                return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+                    method: "getTransactionsCount",
+                    params, result, error
+                });
+            }
+        });
+    }
+    getTransactionsHistory(addressOrName, pageIndex, pageSize, fullTx, txType, order) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                address: this._getAddress(addressOrName),
+                pageIndex: pageIndex,
+                pageSize: pageSize,
+                fullTx: fullTx,
+                txType: txType,
+                order: order,
+            });
+            return this.perform("getTransactionsHistory", params);
+        });
+    }
+    ///////////// END /////////
+    //Staking
+    //Delegation
+    getDelegationsByDelegator(delegator) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                delegator: this._getAddress(delegator),
+            });
+            return this.perform("getDelegationsByDelegator", params);
+        });
+    }
+    getDelegationsByDelegatorByBlockNumber(delegator, blockNumber) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                delegator: this._getAddress(delegator),
+                blockNumber: blockNumber
+            });
+            return this.perform("getDelegationsByDelegatorByBlockNumber", params);
+        });
+    }
+    getDelegationsByValidator(validator) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                validator: this._getAddress(validator),
+            });
+            return this.perform("getDelegationsByValidator", params);
+        });
+    }
+    // async getDelegationsByValidatorByBlockNumber(validator: string | Promise<string>, blockNumber: number): Promise<Delegation[]> {
+    //     await this.getNetwork();
+    //     const params = await resolveProperties({
+    //         validator: this._getAddress(validator),
+    //         blockNumber: blockNumber
+    //     });
+    //     const result = await this.perform("getDelegationsByValidatorByBlockNumber", params); 
+    //     try {
+    //         return result;
+    //     } catch (error) {
+    //         return logger.throwError("bad result from backend", Logger.errors.SERVER_ERROR, {
+    //             method: "getDelegationsByValidatorByBlockNumber",
+    //             params, result, error
+    //         });
+    //     }
+    // }
+    // Validator
+    getAllValidatorAddresses() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {};
+            return this.perform("getAllValidatorAddresses", params);
+        });
+    }
+    getAllValidatorInformation(pageIndex) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {
+                pageIndex: pageIndex
+            };
+            return this.perform("getAllValidatorInformation", params);
+        });
+    }
+    getAllValidatorInformationByBlockNumber(pageIndex, blockNumber) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {
+                pageIndex: pageIndex,
+                blockNumber: blockNumber,
+            };
+            return this.perform("getAllValidatorInformationByBlockNumber", params);
+        });
+    }
+    getElectedValidatorAddresses() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {};
+            return this.perform("getElectedValidatorAddresses", params);
+        });
+    }
+    getValidatorInformation(validator) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                validator: this._getAddress(validator),
+            });
+            return this.perform("getValidatorInformation", params);
+        });
+    }
+    //Network
+    getCurrentUtilityMetrics() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {};
+            return this.perform("getCurrentUtilityMetrics", params);
+        });
+    }
+    getMedianRawStakeSnapshot() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {};
+            return this.perform("getMedianRawStakeSnapshot", params);
+        });
+    }
+    getStakingNetworkInfo() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {};
+            return this.perform("getStakingNetworkInfo", params);
+        });
+    }
+    getSuperCommittees() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {};
+            return this.perform("getSuperCommittees", params);
+        });
+    }
+    //Transaction
+    //Cross Shard
+    getCXReceiptByHash(cxHash) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = yield resolveProperties({
+                cxHash: cxHash,
+            });
+            return this.perform("getCXReceiptByHash", params);
+        });
+    }
+    getPendingCXReceipts() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {};
+            return this.perform("getPendingCXReceipts", params);
+        });
+    }
+    resendCx(cxHash) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {
+                cxHash: cxHash
+            };
+            return this.perform("resendCx", params);
+        });
+    }
+    //Transaction Pool
+    getPoolStats() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {};
+            return this.perform("getPoolStats", params);
+        });
+    }
+    getPendingStakingTransaction() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {};
+            return this.perform("getPendingStakingTransaction", params);
+        });
+    }
+    getPendingTransactions() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {};
+            return this.perform("getPendingTransactions", params);
+        });
+    }
+    //Staking
+    getCurrentStakingErrorSink() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {};
+            return this.perform("getCurrentStakingErrorSink", params);
+        });
+    }
+    getStakingTransactionByBlockNumberAndIndex(blockNumber, stakingTransactionIndex) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {
+                blockNumber: blockNumber,
+                stakingTransactionIndex: stakingTransactionIndex,
+            };
+            return this.perform("getStakingTransactionByBlockNumberAndIndex", params);
+        });
+    }
+    getStakingTransactionByBlockHashAndIndex(blockHash, stakingTransactionIndex) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {
+                blockHash: blockHash,
+                stakingTransactionIndex: stakingTransactionIndex,
+            };
+            return this.perform("getStakingTransactionByBlockHashAndIndex", params);
+        });
+    }
+    getStakingTransactionByHash(txHash) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {
+                txHash: txHash,
+            };
+            return this.perform("getStakingTransactionByHash", params);
+        });
+    }
+    sendRawStakingTransaction(signedTransaction) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const hexTx = yield Promise.resolve(signedTransaction).then(t => hexlify(t));
+            const tx = this.formatter.transaction(signedTransaction);
+            try {
+                const hash = yield this.perform("sendRawStakingTransaction", { signedTransaction: hexTx });
+                return this._wrapTransaction(tx, hash);
+            }
+            catch (error) {
+                error.transaction = tx;
+                error.transactionHash = tx.hash;
+                throw error;
+            }
+        });
+    }
+    //Transfer
+    getCurrentTransactionErrorSink() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {};
+            return this.perform("getCurrentTransactionErrorSink", params);
+        });
+    }
+    getTransactionByBlockNumberAndIndex(blockNumber, transactionIndex) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {
+                blockNumber: blockNumber,
+                transactionIndex: transactionIndex,
+            };
+            return this.perform("getTransactionByBlockNumberAndIndex", params);
+        });
+    }
+    getTransactionByBlockHashAndIndex(blockHash, transactionIndex) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {
+                blockHash: blockHash,
+                transactionIndex: transactionIndex,
+            };
+            return this.perform("getTransactionByBlockHashAndIndex", params);
+        });
+    }
+    getTransactionByHash(txHash) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const params = {
+                txHash: txHash,
+            };
+            return this.perform("getTransactionByHash", params);
+        });
+    }
+    getTransactionReceipt(transactionHash) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            transactionHash = yield transactionHash;
+            const params = { transactionHash: this.formatter.hash(transactionHash, true) };
+            return poll(() => __awaiter(this, void 0, void 0, function* () {
+                const result = yield this.perform("getTransactionReceipt", params);
+                if (result == null) {
+                    if (this._emitted["t:" + transactionHash] == null) {
+                        return null;
+                    }
+                    return undefined;
+                }
+                // "geth-etc" returns receipts before they are ready
+                if (result.blockHash == null) {
+                    return undefined;
+                }
+                const receipt = this.formatter.receipt(result);
+                if (receipt.blockNumber == null) {
+                    receipt.confirmations = 0;
+                }
+                else if (receipt.confirmations == null) {
+                    const blockNumber = yield this._getInternalBlockNumber(100 + 2 * this.pollingInterval);
+                    // Add the confirmations using the fast block number (pessimistic)
+                    let confirmations = (blockNumber - receipt.blockNumber) + 1;
+                    if (confirmations <= 0) {
+                        confirmations = 1;
+                    }
+                    receipt.confirmations = confirmations;
+                }
+                return receipt;
+            }), { oncePoll: this });
+        });
+    }
+    sendRawTransaction(signedTransaction) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getNetwork();
+            const hexTx = yield Promise.resolve(signedTransaction).then(t => hexlify(t));
+            const tx = this.formatter.transaction(signedTransaction);
+            try {
+                const hash = yield this.perform("sendRawTransaction", { signedTransaction: hexTx });
+                return this._wrapTransaction(tx, hash);
+            }
+            catch (error) {
+                error.transaction = tx;
+                error.transactionHash = tx.hash;
+                throw error;
             }
         });
     }

@@ -9,5 +9,8 @@
     "./src.ts/*.ts",
     "./src.ts/harmony/*.ts",
     "./thirdparty.d.ts"
+  ],
+  "typeRoots": [
+    "./src.ts/harmony/harmony-provider.d.ts"
   ]
 }
