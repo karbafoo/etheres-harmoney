@@ -1,3 +1,9 @@
+HARMONY PRIVDER IS IN HARMONY FOLDER UNDER PACKAGES
+
+==============
+
+
+
 The Ethers Project
 ==================
 
